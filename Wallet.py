@@ -26,7 +26,7 @@ class Wallet:
             return False
     ## https://www.pycryptodome.org/src/signature/pkcs1_v1_5
         
-
+# Τα παρακάτω θέλουν τροποποίηση, για την ιδέα τα έβαλα:
     def create_transaction(self, receiver_address, ):
         transaction = Transaction(self.publicKeyString(), receiver_address, )
 
