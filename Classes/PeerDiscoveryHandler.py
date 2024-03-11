@@ -2,7 +2,7 @@
 
 import threading
 from Classes.Message import Message
-from blockchain_utils import BlockChainUtils
+from BlockChainUtils import BlockChainUtils
 
 
 class PeerDiscoveryHandler:
@@ -10,22 +10,17 @@ class PeerDiscoveryHandler:
 
     def __init__(self, node):
         self.socket_communication = node
+        self.discovery_thread = None
 
     def start(self):
-        """Starts the status and discovery method in their own thread"""
-        #status_thread = threading.Thread(target=self.status, args=())
-        #status_thread.start()
-        discovery_thread = threading.Thread(target=self.discovery, args=())
-        discovery_thread.start()
+        """Starts the discovery method in its own thread"""
+        self.discovery_thread = threading.Thread(target=self.discovery, args=())
+        self.discovery_thread.start()
 
-    def status(self):
-        """Broadcasting all the nodes you are connected to"""
-        while True:
-            print("Current Connections:")
-            for peer in self.socket_communication.peers:
-                print(
-                    str(peer.ip) + ":" + str(peer.port)
-                )  # Displays socket of peer (which is the port number added to the IP address)
+    def stop(self):
+        """Stop the discovery thread (Should be called when all connections are set)"""
+        self.discovery_thread.stop()
+        self.discovery_thread.join()
 
     def discovery(self):
         """Checking for new nodes by broadcasting a handshake message"""

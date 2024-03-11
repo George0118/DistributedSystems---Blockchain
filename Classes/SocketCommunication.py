@@ -2,6 +2,7 @@ from Classes.SocketConnector import SocketConnector
 from p2pnetwork.node import Node
 from Classes.PeerDiscoveryHandler import PeerDiscoveryHandler
 from Classes.SocketConnector import SocketConnector
+from BlockChainUtils import BlockChainUtils
 import json
 
 class SocketCommunication(Node):

@@ -3,10 +3,18 @@ from Classes.TransactionPool import TransactionPool
 from wallet import Wallet
 from blockchain import Blockchain
 from Classes.SocketCommunication import SocketCommunication
-from node_api import NodeAPI
+from NodeAPI import NodeAPI
 from Classes.Message import Message
-from blockchain_utils import BlockChainUtils
+from BlockChainUtils import BlockChainUtils
+from enum import Enum
 
+
+class NodeState(Enum):
+    DOWN = "DOWN"   # Node is dead
+    UP = "UP"       # Node is up and ready to receive the 1000 BCC
+    INITIALIZED = "INITIALIZED"     # Node is initialized with the 1000 BCC
+    READY = "READY"     # Node has 1000 BCC and is ready to start making transcations
+    ERROR = "ERROR"     # Node is in Error state
 
 class Node:
     """
@@ -21,6 +29,9 @@ class Node:
         self.transaction_pool = TransactionPool()
         self.wallet = Wallet()
         self.api = None
+        self.state = NodeState.DOWN
+        self.stakes_list = []       # For each Node keep their stake (last stake they have set in a valid block)
+        self.funds_list = []        # For each Node keep their funds (money) to not allow for invalid transcations
 
     def start_p2p(self):
         """
@@ -28,6 +39,7 @@ class Node:
         """
         self.p2p = SocketCommunication(self.ip, self.port)
         self.p2p.start_socket_communication(self)
+        self.state = NodeState.UP
 
     def start_api(self, api_port):
         """

@@ -1,6 +1,5 @@
 """For creating messages"""
 
-
 class Message:
     """For creating messages"""
 
