@@ -1,4 +1,4 @@
-from Crypto.PublicKey import RSA    # pip install pycryptodome
+from Crypto.PublicKey import RSA    # pycryptodome
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
 
@@ -26,7 +26,7 @@ class Wallet:
             return False
     ## https://www.pycryptodome.org/src/signature/pkcs1_v1_5
         
-# Τα παρακάτω θέλουν τροποποίηση, για την ιδέα τα έβαλα:
+
     def create_transaction(self, receiver_address, ):
         transaction = Transaction(self.publicKeyString(), receiver_address, )
 
@@ -40,13 +40,4 @@ class Wallet:
         signature = self.sign(block.payload())
         block.sign(signature)
         return block
-        
-# if __name__ == "__main__":
 
-#     wallet = Wallet()
-
-#     print("Public Key:")
-#     print(wallet.public_key)
-
-#     print("\nPrivate Key:")
-#     print(wallet.private_key)
