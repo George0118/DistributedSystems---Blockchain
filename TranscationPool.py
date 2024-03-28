@@ -34,3 +34,6 @@ class TransactionPool:
     def validation_required(self):
         """Decides if it is time to create a new block"""
         return len(self.transactions) >= capacity
+    
+    def get_length(self):
+        return len(self.transactions)

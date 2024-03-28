@@ -28,20 +28,19 @@ class P2P:
         # try:
         connection = self.socket.connect((peer_ip, peer_port))
         self.connections.append(self.socket)
-        self.peers.append(peer_address)
         print(f"  |-> Connected to {peer_ip}:{peer_port}")
 
         self.socket.sendall(pickle.dumps((self.ip, self.port)))
+        self.peers.append(peer_address)
         # except socket.error as e:
         #     print(f"Failed to connect to {peer_ip}:{peer_port}. Error: {e}")            
 
     # Method for sending messages-data
-    def data_exchange(self, data):
-        for connection in self.connections:
-            # try:
-            connection.sendall(pickle.dumps(data))
-            # except socket.error as e:
-            #     print(f"Failed to send data. Error: {e}")
+    def data_exchange(self, data, connection):
+        # try:
+        connection.sendall(pickle.dumps(data))
+        # except socket.error as e:
+        #     print(f"Failed to send data. Error: {e}")
 
     # Method to listen for upcoming connections and receive address to append to peers' addresses list
     # The bootstrap-node, additionally, sends so-far-peers' addresses' list
@@ -55,7 +54,7 @@ class P2P:
             print(f"Accepted connection from {listening_address}")
 
             if (self.port == 40000):
-                self.data_exchange(self.peers)
+                self.data_exchange(self.peers, self.connections[-1])
             self.peers.append(listening_address)
 
 
@@ -95,7 +94,6 @@ class P2P:
             # Unpickle the received data
             message = pickle.loads(data)
             if message:
-                print(message)
                 decoded_message = BlockChainUtils.decode(message)
                 if decoded_message.message_type == "TRANSACTION":
                     self.wallet.handle_transaction(decoded_message.data)
@@ -111,28 +109,23 @@ class P2P:
         while True:
             # Read command from the command line
             command = input("> ")
+            if len(command.strip()) != 0:
+                arguments = process_command(command)
+                arguments = json.loads(arguments)
 
-            arguments = process_command(command)
-            arguments = json.loads(arguments)
-            print(arguments)
+                transaction_to_send = self.wallet.create_transaction(
+                                                    arguments["receiver"],
+                                                    arguments["type"], 
+                                                    arguments.get("amount", 0),  # Use default value if "amount" key is not present
+                                                    arguments.get("data", "")  # Use default value if "data" key is not present
+                                                )
+                
+                message = self.wallet.check_transaction(transaction_to_send)
+                message = pickle.dumps(message)
 
-            # try:
-            transaction_to_send = self.wallet.create_transaction(
-                                                arguments["receiver"],
-                                                arguments["type"], 
-                                                arguments.get("amount", 0),  # Use default value if "amount" key is not present
-                                                arguments.get("data", "")  # Use default value if "data" key is not present
-                                            )
-            
-            message = self.wallet.check_transaction(transaction_to_send)
-            message = pickle.dumps(message)
-
-            if message is not None:
-                for socket in self.connections:
-                    socket.sendall(message)
-
-            # except Exception as e:
-            #     print(f"An error occurred: {e}")
+                if message is not None:
+                    for socket in self.connections:
+                        socket.sendall(message)
 
     def blockchaining(self):
 
