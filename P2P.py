@@ -4,7 +4,7 @@ import time
 import pickle
 from Commands import process_command
 from Wallet import Wallet
-from Message import Message
+from BlockChainUtils import BlockChainUtils
 import json
 
 # Class for the bootstrapping and "node-discovery" (represents all nodes' process, including bootstrap's)
@@ -25,23 +25,23 @@ class P2P:
     def connecting(self, peer_address):
         peer_ip, peer_port = peer_address
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            connection = self.socket.connect((peer_ip, peer_port))
-            self.connections.append(self.socket)
-            self.peers.append(peer_address)
-            print(f"  |-> Connected to {peer_ip}:{peer_port}")
+        # try:
+        connection = self.socket.connect((peer_ip, peer_port))
+        self.connections.append(self.socket)
+        self.peers.append(peer_address)
+        print(f"  |-> Connected to {peer_ip}:{peer_port}")
 
-            self.socket.sendall(pickle.dumps((self.ip, self.port)))
-        except socket.error as e:
-            print(f"Failed to connect to {peer_ip}:{peer_port}. Error: {e}")            
+        self.socket.sendall(pickle.dumps((self.ip, self.port)))
+        # except socket.error as e:
+        #     print(f"Failed to connect to {peer_ip}:{peer_port}. Error: {e}")            
 
     # Method for sending messages-data
     def data_exchange(self, data):
         for connection in self.connections:
-            try:
-                connection.sendall(pickle.dumps(data))
-            except socket.error as e:
-                print(f"Failed to send data. Error: {e}")
+            # try:
+            connection.sendall(pickle.dumps(data))
+            # except socket.error as e:
+            #     print(f"Failed to send data. Error: {e}")
 
     # Method to listen for upcoming connections and receive address to append to peers' addresses list
     # The bootstrap-node, additionally, sends so-far-peers' addresses' list
@@ -88,15 +88,23 @@ class P2P:
 
     def listening(self, socket):
         print(f"Ready and listening on {self.ip}:{self.port} for socket {socket.getpeername()}")
-        try:
-            while True:
-                # Receive data from the client
-                data = socket.recv(4096)
-                # Unpickle the received data
-                message = pickle.loads(data)
-                print(f"\n{message.data}")
-        except Exception as e:
-            print(f"An error occurred: {e}")
+        # try:
+        while True:
+            # Receive data from the client
+            data = socket.recv(4096)
+            # Unpickle the received data
+            message = pickle.loads(data)
+            if message:
+                print(message)
+                decoded_message = BlockChainUtils.decode(message)
+                if decoded_message.message_type == "TRANSACTION":
+                    self.wallet.handle_transaction(decoded_message.data)
+                elif decoded_message.message_type == "BLOCK":
+                    self.wallet.handle_block(decoded_message.data)
+                else:
+                    self.wallet.handle_blockhain(decoded_message.data)
+            # except Exception as e:
+        #     print(f"An error occurred: {e}")
 
     def command_reading(self):
         print(f"Ready and awaiting user commands.")
@@ -108,22 +116,23 @@ class P2P:
             arguments = json.loads(arguments)
             print(arguments)
 
-            try:
-                transaction_to_send = self.wallet.create_transaction(
-                                                    arguments["receiver"],
-                                                    arguments["type"], 
-                                                    arguments.get("amount", 0),  # Use default value if "amount" key is not present
-                                                    arguments.get("data", "")  # Use default value if "data" key is not present
-                                                )
-                
-                message = Message(message_type="TRANSACTION", data=transaction_to_send)
-                message = pickle.dumps(message)
+            # try:
+            transaction_to_send = self.wallet.create_transaction(
+                                                arguments["receiver"],
+                                                arguments["type"], 
+                                                arguments.get("amount", 0),  # Use default value if "amount" key is not present
+                                                arguments.get("data", "")  # Use default value if "data" key is not present
+                                            )
+            
+            message = self.wallet.check_transaction(transaction_to_send)
+            message = pickle.dumps(message)
 
+            if message is not None:
                 for socket in self.connections:
                     socket.sendall(message)
 
-            except Exception as e:
-                print(f"An error occurred: {e}")
+            # except Exception as e:
+            #     print(f"An error occurred: {e}")
 
     def blockchaining(self):
 

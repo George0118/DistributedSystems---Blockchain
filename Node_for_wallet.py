@@ -57,7 +57,7 @@ class Node:
         signature = transaction.signature
         signer_address = transaction.sender_address
 
-        signature_valid = Wallet.verify_signature(data, signature, signer_address)  # Check if signature is valid
+        signature_valid = Wallet.verify_transaction(data, signature, signer_address)  # Check if signature is valid
 
         transaction_exists = self.transaction_pool.transaction_exists(transaction)  # Checks if transaction already exists in the pool
 
