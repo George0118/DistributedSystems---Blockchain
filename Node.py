@@ -45,7 +45,7 @@ class Node:
                                                     receiver_address,
                                                     arguments["type"], 
                                                     arguments.get("amount", 0),  # Use default value if "amount" key is not present
-                                                    arguments.get("data", "")  # Use default value if "data" key is not present
+                                                    arguments.get("message", "")  # Use default value if "data" key is not present
                                                 )
                 
                 message = self.wallet.check_transaction(transaction_to_send)
