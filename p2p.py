@@ -10,7 +10,7 @@ from config import N
 
 # Class for the bootstrapping and "node-discovery" (represents all nodes' process, including bootstrap's)
 class P2P:
-    def __init__(self, ip, port, pub_key):
+    def __init__(self, ip, port, pub_key, blockchain):
         #self.id = None
         self.ip = ip
         self.port = port
@@ -19,6 +19,7 @@ class P2P:
         self.nodes = {}       # Dictionary of nodes' id: sending_socket}
         self.bootstrap_node = ("127.0.0.1", 40000)
         self.cluster_size = N
+        self.blockchain = blockchain
 
         self.listening_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listening_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)        
@@ -73,22 +74,24 @@ class P2P:
         bootstrap_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         bootstrap_socket.connect((bootstrap_ip, bootstrap_port))
 
-        # Receive my ID
-        response_1 = bootstrap_socket.recv(1024).decode()
-        self.id = json.loads(response_1)
+        # Receive my ID and Blockchain-so-far (only Genesis Block)
+        id_blockchain_json = bootstrap_socket.recv(1024).decode()
+        id_blockchain = json.loads(id_blockchain_json)
+        self.id = id_blockchain['id']
+        self.blockchain = id_blockchain['blockchain']
 
         # Send my info: ip, port and public key
-        my_info = {
+        ip_port_pubkey = {
             'ip': self.ip,
             'port': self.port,
             'pub_key': self.pub_key
         }
-        bootstrap_socket.send(json.dumps(my_info).encode())
+        bootstrap_socket.send(json.dumps(ip_port_pubkey).encode())
 
         # Receive peers' infos
-        response_2 = bootstrap_socket.recv(40960).decode()
+        peers_info_json = bootstrap_socket.recv(40960).decode()
         # Update self.peers (id, ip, port and pub_key)
-        self.peers = json.loads(response_2)
+        self.peers = json.loads(peers_info_json)
         
         bootstrap_socket.close()
 
@@ -102,13 +105,17 @@ class P2P:
             id = "id" + str(i)
             temp_socket, client_address = self.listening_socket.accept()
 
-            temp_socket.send(json.dumps(id).encode())
+            id_blockchain = {
+                'id': id,
+                'blockchain': self.blockchain
+            }
+            temp_socket.send(json.dumps(id_blockchain).encode())
             
-            response = temp_socket.recv(1024).decode()
-            peer_info = json.loads(response)
-            ip = peer_info['ip']
-            port = peer_info['port']
-            pub_key = peer_info['pub_key']
+            ip_port_pubkey_json = temp_socket.recv(1024).decode()
+            ip_port_pubkey = json.loads(ip_port_pubkey_json)
+            ip = ip_port_pubkey['ip']
+            port = ip_port_pubkey['port']
+            pub_key = ip_port_pubkey['pub_key']
 
             self.peers[id] = {'ip': ip, 'port': port, 'public_key': pub_key, 'balance': 0, 'stake': 10}
 
@@ -126,6 +133,7 @@ class P2P:
         if (self.port == 40000):
             self.id = "id0"
             self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.pub_key, 'balance': 0, 'stake': 10}}
+            self.blockchain.create_genesis_transaction()    # NEW
             self.bootstrap_mode()
             threading.Thread(target=self.start_listening).start()
             time.sleep(2)
