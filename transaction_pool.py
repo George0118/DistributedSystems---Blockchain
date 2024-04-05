@@ -1,6 +1,5 @@
 """For creating and managing a list of transactions"""
-
-from blockchain import Blockchain
+capacity = 5
 
 
 class TransactionPool:
@@ -34,4 +33,7 @@ class TransactionPool:
 
     def validation_required(self):
         """Decides if it is time to create a new block"""
-        return len(self.transactions) >= Blockchain().capacity
+        return len(self.transactions) >= capacity
+    
+    def get_length(self):
+        return len(self.transactions)

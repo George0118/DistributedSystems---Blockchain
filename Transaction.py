@@ -5,7 +5,7 @@ import json
 import hashlib
 
 class Transaction:
-    def __init__(self, type, receiver_address, me, amount, message):
+    def __init__(self, type, receiver_address, my_public_key, amount, message, nonce):
 
         self.type = type                            # Set the Transcation Type (Initialization | Stake | Exchange)
         
@@ -14,9 +14,9 @@ class Transaction:
         else:
             self.receiver_address = 0
 
-        self.sender_address = me.publicKey          # Sender Address (MyAddress)
+        self.sender_address = my_public_key         # Sender Address (MyAddress)
         self.signature = None                       # Signature (Needs to be signed)
-        self.nonce = me.counter                     # Nonce
+        self.nonce = nonce                          # Nonce
 
         if self.type != "Exchange":
             self.fee = 0

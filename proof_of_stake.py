@@ -1,7 +1,7 @@
 """Consensus algorithm - keeps track of amount of stake of each account 
 (to decide who is the next validator)"""
 
-from blockchain_utils import BlockChainUtils
+from utils import BlockChainUtils
 from lot import Lot
 
 
@@ -12,13 +12,6 @@ class ProofOfStake:
     def __init__(self):
         self.stakers = {}  # Mapping of account to stake
         # self.set_genesis_node_stake()  # Initial staker
-
-    # def set_genesis_node_stake(self):
-    #     """Adds initial staker to dictionary"""
-    #     genesis_public_key = open(
-    #         "/home/geoka/Desktop/my_block/keys/genesis_public_key.pem", "r", encoding="utf-8"
-    #     ).read()
-    #     self.stakers[genesis_public_key] = 1  # Their stake is 1
 
     def update(self, public_key_string, stake):
         """Updates stake of an account"""
