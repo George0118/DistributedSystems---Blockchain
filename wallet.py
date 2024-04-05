@@ -83,8 +83,7 @@ class Wallet:
         if self.validate_transaction(transaction):
             # If the signature is valid and the transaction is new, it is added to the pool
             self.transaction_pool.add_transaction(transaction)
-            if transaction.type != "Stake":
-                self.execute_transaction(transaction)
+            self.execute_transaction(transaction)
         else:
             print("Invalid transaction") 
 
@@ -98,31 +97,48 @@ class Wallet:
 
         signature_valid = self.verify_transaction(signer_address, data, signature)  # Check if signature is valid
 
-        transaction_exists = self.transaction_pool.transaction_exists(transaction)  # Checks if transaction already exists in the pool
-
-        # transaction_in_block = self.blockchain.transaction_exists(transaction)
-        # transaction_covered = self.blockchain.transaction_covered(transaction)
+        transaction_covered = self.transaction_covered(transaction)
         if (
-            not transaction_exists
-            # and not transaction_in_block
-            and signature_valid
-            # and transaction_covered
+            signature_valid
+            and transaction_covered
         ):
             return True
         return False     
     
-    def execute_transaction(self, transaction:Transaction):
-        """ Executes a Transaction saving its changes to the wallets"""
-        # Given the user id find its public key from your dictionary
-        receiver_id = None
+    def transaction_covered(self, transaction:Transaction):
+        """ Checks whether the sender has enough money to execute this transaction """
         sender_id = None
         for id, dict_id in self.peers.items():
-            if dict_id["public_key"] == transaction.receiver_address:
-                receiver_id = id
             if dict_id["public_key"] == transaction.sender_address:
                 sender_id = id
-        self.peers[sender_id]["balance"] -= transaction.amount
-        self.peers[receiver_id]["balance"] += transaction.amount
+        current_balance = self.peers[sender_id]["balance"]
+        if current_balance >= transaction.amount + transaction.fee:
+            return True
+        else:
+            return False
+    
+    def execute_transaction(self, transaction:Transaction):
+        """ Executes a Transaction saving its changes to the wallets"""
+        # If the transaction is Exchange or Initialization then remove from sender balance and add to receiver
+        if transaction.type == "Exchange" or transaction.type == "Initialization":      
+            receiver_id = None
+            sender_id = None
+            for id, dict_id in self.peers.items():
+                if dict_id["public_key"] == transaction.receiver_address:
+                    receiver_id = id
+                if dict_id["public_key"] == transaction.sender_address:
+                    sender_id = id
+            
+            self.peers[sender_id]["balance"] -= (transaction.amount + transaction.fee)
+            self.peers[receiver_id]["balance"] += transaction.amount
+
+        elif transaction.type == "Stake":       # If the transaction is Stake then remove the money from the balance
+            sender_id = None
+            for id, dict_id in self.peers.items():
+                if dict_id["public_key"] == transaction.sender_address:
+                    sender_id = id
+            
+            self.peers[sender_id]["balance"] -= (transaction.amount - self.peers[sender_id]["stake"])
 
     def handle_block(self, block:Block, sender):
         """
@@ -181,7 +197,11 @@ class Wallet:
     def update_stakes(self, block:Block):
         for transaction in block.transactions:
             if transaction.type == "Stake":
-                self.stakes[self.peers[transaction.sender_address]] = transaction.amount
+                change_id = None
+                for id, dict_id in self.peers.items():
+                    if dict_id["public_key"] == transaction.sender_address:
+                        change_id = id
+                self.peers[change_id]["stake"] = transaction.amount
 
 
         
