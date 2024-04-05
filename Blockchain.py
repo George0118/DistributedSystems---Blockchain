@@ -6,8 +6,7 @@ from AccountModel import AccountModel
 from ProofOfStake import ProofOfStake
 
 from Transaction import Transaction
-from Wallet import Wallet
-NUMBER_OF_USERS = 3
+from config import N
 
 
 class Blockchain:
@@ -29,7 +28,7 @@ class Blockchain:
         genesis_transaction = Transaction(
             sender_address="0",
             receiver_address=bootstrap_node_public_key,
-            amount=1000 * NUMBER_OF_USERS,
+            amount=1000 * N,
             nonce=0,
             message="",
             type_of_transaction="EXCHANGE",
@@ -138,7 +137,7 @@ class Blockchain:
         next_validator = self.pos.validator(last_block_hash)
         return next_validator
 
-    def create_block(self, transactions_from_pool, validator_wallet: Wallet):
+    def create_block(self, transactions_from_pool, validator_wallet):
         """Creates a new block"""
         covered_transactions = self.get_covered_transaction_set(
             transactions_from_pool

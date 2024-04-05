@@ -11,18 +11,15 @@ from ProofOfStake import ProofOfStake
 from Blockchain import Blockchain
 from config import N
 
-bootstrap_node = "127.0.0.1:40000"
-
 class Wallet:
 
-    def __init__(self, blockchain: Blockchain, peers):
-        self.blockchain = blockchain
+    def __init__(self):
         self.generate_wallet()
         self.nonce = 0
         self.transaction_pool = TransactionPool()
         self.pos = ProofOfStake()
-        self.stakes = [0] * N
-        self.wallets = [0] * N
+
+    def set_peers(self, peers):
         self.peers = peers
     
     def generate_wallet(self):
