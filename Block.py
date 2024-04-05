@@ -2,6 +2,8 @@
 
 import time
 from BlockChainUtils import BlockChainUtils
+from typing import List
+from Transaction import Transaction
 CAPACITY = 5
 
 
@@ -10,7 +12,7 @@ class Block:
     For creating and managing blocks - a container that holds data (including transactions)
     """
 
-    def __init__(self, transactions, previous_hash, validator, index):
+    def __init__(self, transactions:List[Transaction], previous_hash, validator, index):
         self.index = index
         self.timestamp = time.time()
         self.transactions = transactions

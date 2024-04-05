@@ -172,3 +172,11 @@ class Blockchain:
         if len(covered_transactions) == len(transactions):
             return True
         return False
+    
+    def get_prevhash(self):
+        """Returns the hash of the last block in the blockchain"""
+        last_block = self.chain[-1]
+        return last_block.current_hash
+    
+    def next_index(self):
+        return len(self.chain)

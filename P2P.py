@@ -9,10 +9,10 @@ import json
 
 # Class for the bootstrapping and "node-discovery" (represents all nodes' process, including bootstrap's)
 class P2P:
-    def __init__(self, ip, port, wallet: Wallet):
+    def __init__(self, ip, port):
         self.ip = ip
         self.port = port
-        self.wallet = wallet
+        self.wallet = None
         self.connections = []
         self.peers = []
         self.bootstrap_node = ("127.0.0.1", 40000)
@@ -20,6 +20,9 @@ class P2P:
 
         self.p2p_network_init()
         self.blockchaining()
+
+    def set_wallet(self, wallet:Wallet):
+        self.wallet = wallet
 
     # Method to connect to a peer and share with it the listening address (port)
     def connecting(self, peer_address):
@@ -85,7 +88,7 @@ class P2P:
         print("End of bootstraping phase!")
 
 
-    def listening(self, socket):
+    def listening(self, socket:socket):
         print(f"Ready and listening on {self.ip}:{self.port} for socket {socket.getpeername()}")
         # try:
         while True:
@@ -98,9 +101,9 @@ class P2P:
                 if decoded_message.message_type == "TRANSACTION":
                     self.wallet.handle_transaction(decoded_message.data)
                 elif decoded_message.message_type == "BLOCK":
-                    self.wallet.handle_block(decoded_message.data)
+                    self.wallet.handle_block(decoded_message.data, socket.getpeername())
                 else:
-                    self.wallet.handle_blockhain(decoded_message.data)
+                    self.wallet.handle_blockchain(decoded_message.data, socket.getpeername())
             # except Exception as e:
         #     print(f"An error occurred: {e}")
 
@@ -113,8 +116,15 @@ class P2P:
                 arguments = process_command(command)
                 arguments = json.loads(arguments)
 
+                # Given the user id find its public key from your dictionary
+                receiver_address = None
+                for public_key, id in self.peers.items():
+                    if id == arguments["receiver"]:
+                        receiver_address = public_key
+                        break
+
                 transaction_to_send = self.wallet.create_transaction(
-                                                    arguments["receiver"],
+                                                    receiver_address,
                                                     arguments["type"], 
                                                     arguments.get("amount", 0),  # Use default value if "amount" key is not present
                                                     arguments.get("data", "")  # Use default value if "data" key is not present
@@ -132,6 +142,9 @@ class P2P:
         print("My current connections are:")
         for c in self.connections:
             print(c)
+
+        while self.wallet is None:
+            pass
 
         # Listening Threads
         for connection in self.connections:

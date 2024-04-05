@@ -7,9 +7,8 @@ class Node:
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port
-        # self.blockchain = Blockchain()
-        self.wallet = Wallet()
+        self.blockchain = Blockchain()
 
-        self.p2p = P2P(self.ip, self.port, self.wallet)
+        self.p2p = P2P(self.ip, self.port)
 
     ### Other defs

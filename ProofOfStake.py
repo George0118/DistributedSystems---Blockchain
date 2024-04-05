@@ -13,13 +13,6 @@ class ProofOfStake:
         self.stakers = {}  # Mapping of account to stake
         # self.set_genesis_node_stake()  # Initial staker
 
-    # def set_genesis_node_stake(self):
-    #     """Adds initial staker to dictionary"""
-    #     genesis_public_key = open(
-    #         "/home/geoka/Desktop/my_block/keys/genesis_public_key.pem", "r", encoding="utf-8"
-    #     ).read()
-    #     self.stakers[genesis_public_key] = 1  # Their stake is 1
-
     def update(self, public_key_string, stake):
         """Updates stake of an account"""
         if public_key_string in self.stakers:  # If public key in dictionary, update
