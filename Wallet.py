@@ -85,8 +85,6 @@ class Wallet:
             self.transaction_pool.add_transaction(transaction)
             if transaction.type != "Stake":
                 self.execute_transaction(transaction)
-            if self.transaction_pool.validation_required():
-                self.mint_block()
         else:
             print("Invalid transaction") 
 
@@ -115,8 +113,16 @@ class Wallet:
     
     def execute_transaction(self, transaction:Transaction):
         """ Executes a Transaction saving its changes to the wallets"""
-        self.wallets[self.peers[transaction.sender_address]] -= transaction.amount
-        self.wallets[self.peers[transaction.receiver_address]] += transaction.amount
+        # Given the user id find its public key from your dictionary
+        receiver_id = None
+        sender_id = None
+        for id, dict_id in self.peers.items():
+            if dict_id["public_key"] == transaction.receiver_address:
+                receiver_id = id
+            if dict_id["public_key"] == transaction.sender_address:
+                sender_id = id
+        self.peers[sender_id]["balance"] -= transaction.amount
+        self.peers[receiver_id]["balance"] += transaction.amount
 
     def handle_block(self, block:Block, sender):
         """

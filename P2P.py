@@ -67,7 +67,7 @@ class P2P:
                     print(f"Connection to peer {peer_id} at {peer_ip}:{peer_port} refused.")
                 except Exception as e:
                     print(f"Error connecting to peer {peer_id}: {e}")
-                    
+
 
     def connect_to_bootstrap_node(self, bootstrap_ip, bootstrap_port):
         bootstrap_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -109,7 +109,7 @@ class P2P:
             port = peer_info['port']
             pub_key = peer_info['pub_key']
 
-            self.peers[id] = {'ip': ip, 'port': port, 'pub_key': pub_key}
+            self.peers[id] = {'ip': ip, 'port': port, 'public_key': pub_key, 'balance': 0, 'stake': 10}
 
             temp_sockets.append(temp_socket)            
             id += 1
@@ -123,7 +123,7 @@ class P2P:
 
         # BOOTSTRAP NODE
         if (self.port == 40000):
-            self.peers = {0: {'ip': self.ip, 'port': self.port, 'pub_key': self.pub_key}}
+            self.peers = {0: {'ip': self.ip, 'port': self.port, 'public_key': self.pub_key, 'balance': 0, 'stake': 10}}
             self.bootstrap_mode()
             threading.Thread(target=self.start_listening).start()
             time.sleep(2)

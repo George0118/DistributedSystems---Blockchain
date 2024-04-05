@@ -35,11 +35,7 @@ class Node:
                 arguments = json.loads(arguments)
 
                 # Given the user id find its public key from your dictionary
-                receiver_address = None
-                for public_key, id in self.p2p.peers.items():
-                    if id == arguments["receiver"]:
-                        receiver_address = public_key
-                        break
+                receiver_address = self.p2p.peers[str(arguments["receiver"])]["public_key"]
 
                 transaction_to_send = self.wallet.create_transaction(
                                                     receiver_address,
@@ -49,11 +45,14 @@ class Node:
                                                 )
                 
                 message = self.wallet.check_transaction(transaction_to_send)
-                message = pickle.dumps(message)
 
                 if message is not None:
+                    message = pickle.dumps(message)
                     for socket in self.p2p.nodes.values():
                         socket.sendall(message)
+
+                if self.wallet.transaction_pool.validation_required():
+                    self.wallet.mint_block()
 
     def blockchaining(self):
 
