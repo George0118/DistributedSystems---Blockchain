@@ -5,17 +5,17 @@ def process_command(string):
     command_info = {}
 
     if splits[0] == "t":
-        command_info["receiver"] = int(splits[1])
+        command_info["receiver"] = splits[1]
         command_info["type"] = "Exchange"
         command_info["amount"] = int(splits[2])
 
     elif splits[0] == "m":
-        command_info["receiver"] = int(splits[1])
+        command_info["receiver"] = splits[1]
         command_info["type"] = "Exchange"
         command_info["message"] = splits[2]
 
     elif splits[0] == "stake":
-        command_info["receiver"] = int(splits[1])
+        command_info["receiver"] = splits[1]
         command_info["type"] = "Stake"
         command_info["amount"] = int(splits[2])
 

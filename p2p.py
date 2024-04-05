@@ -11,11 +11,11 @@ from config import N
 # Class for the bootstrapping and "node-discovery" (represents all nodes' process, including bootstrap's)
 class P2P:
     def __init__(self, ip, port, pub_key):
-        self.id = None
+        #self.id = None
         self.ip = ip
         self.port = port
         self.pub_key = pub_key
-        self.peers = None     # Dictionary of peers' id: {'ip': ip, 'port': port and 'pub_key': pub_key}
+        #self.peers = None     # Dictionary of peers' id: {'ip': ip, 'port': port and 'pub_key': pub_key}
         self.nodes = {}       # Dictionary of nodes' id: sending_socket}
         self.bootstrap_node = ("127.0.0.1", 40000)
         self.cluster_size = N
@@ -95,10 +95,11 @@ class P2P:
 
     def bootstrap_mode(self):
         self.listening_socket.listen()
-        id = 1
+        i = 1
         temp_sockets = []
         
-        while id < self.cluster_size:
+        while i < self.cluster_size:
+            id = "id" + str(i)
             temp_socket, client_address = self.listening_socket.accept()
 
             temp_socket.send(json.dumps(id).encode())
@@ -112,7 +113,7 @@ class P2P:
             self.peers[id] = {'ip': ip, 'port': port, 'public_key': pub_key, 'balance': 0, 'stake': 10}
 
             temp_sockets.append(temp_socket)            
-            id += 1
+            i += 1
         
         for socket in temp_sockets:
             socket.send(json.dumps(self.peers).encode())
@@ -123,8 +124,8 @@ class P2P:
 
         # BOOTSTRAP NODE
         if (self.port == 40000):
-            self.id = 0
-            self.peers = {0: {'ip': self.ip, 'port': self.port, 'public_key': self.pub_key, 'balance': 0, 'stake': 10}}
+            self.id = "id0"
+            self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.pub_key, 'balance': 0, 'stake': 10}}
             self.bootstrap_mode()
             threading.Thread(target=self.start_listening).start()
             time.sleep(2)

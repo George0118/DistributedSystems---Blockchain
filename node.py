@@ -16,9 +16,10 @@ class Node:
         self.wallet.set_peers(self.p2p.peers)
         # self.wallet.set_blockchain(self.p2p.blockchain)
         self.p2p.set_wallet(self.wallet)
+        print(self.p2p.peers)
 
         # Start Blockchaining
-        # self.blockchaining()
+        self.blockchaining()
 
     def broadcast_message(p2p, message):
         for id, socket in p2p.nodes.items():
@@ -35,7 +36,7 @@ class Node:
                 arguments = json.loads(arguments)
 
                 # Given the user id find its public key from your dictionary
-                receiver_address = self.p2p.peers[str(arguments["receiver"])]["public_key"]
+                receiver_address = self.p2p.peers[arguments["receiver"]]["public_key"]
 
                 transaction_to_send = self.wallet.create_transaction(
                                                     receiver_address,
@@ -56,9 +57,9 @@ class Node:
 
     def blockchaining(self):
 
-        print("My current connections are:")
-        for n in self.p2p.nodes.values():
-            print(n)
+        # print("My current connections are:")
+        # for n in self.p2p.nodes.values():
+        #     print(n)
 
         while self.wallet is None:
             pass
