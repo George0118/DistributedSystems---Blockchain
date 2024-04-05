@@ -123,6 +123,7 @@ class P2P:
 
         # BOOTSTRAP NODE
         if (self.port == 40000):
+            self.id = 0
             self.peers = {0: {'ip': self.ip, 'port': self.port, 'public_key': self.pub_key, 'balance': 0, 'stake': 10}}
             self.bootstrap_mode()
             threading.Thread(target=self.start_listening).start()

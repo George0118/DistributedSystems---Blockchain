@@ -18,7 +18,7 @@ class Node:
         self.p2p.set_wallet(self.wallet)
 
         # Start Blockchaining
-        self.blockchaining()
+        # self.blockchaining()
 
     def broadcast_message(p2p, message):
         for id, socket in p2p.nodes.items():
