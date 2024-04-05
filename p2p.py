@@ -10,22 +10,23 @@ from config import N
 
 # Class for the bootstrapping and "node-discovery" (represents all nodes' process, including bootstrap's)
 class P2P:
-    def __init__(self, ip, port, pub_key, blockchain):
+    def __init__(self, ip, port, wallet, blockchain):
         #self.id = None
         self.ip = ip
         self.port = port
-        self.pub_key = pub_key
-        #self.peers = None     # Dictionary of peers' id: {'ip': ip, 'port': port and 'pub_key': pub_key}
+        self.pub_key = wallet.pub_key
+        #self.peers = None     # Dictionary of peers' id: {'ip': ip, 'port': port, 'pub_key': pub_key, 'amount': amount, 'stake': stake}
         self.nodes = {}       # Dictionary of nodes' id: sending_socket}
         self.bootstrap_node = ("127.0.0.1", 40000)
         self.cluster_size = N
+        self.wallet = wallet
         self.blockchain = blockchain
 
         self.listening_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listening_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)        
         self.listening_socket.bind((self.ip, self.port))
 
-    def set_wallet(self, wallet):
+    def set_wallet(self, wallet):   # ?
         self.wallet = wallet
 
     def start_listening(self):
@@ -68,6 +69,14 @@ class P2P:
                     print(f"Connection to peer {peer_id} at {peer_ip}:{peer_port} refused.")
                 except Exception as e:
                     print(f"Error connecting to peer {peer_id}: {e}")
+
+            if ((self.id, self.port) == self.bootstrap_node):
+                # MAKE AND SEND TRANSATION
+                pass
+            else:
+                while True:
+                    if (self.peers[self.id]['amount'] < 1000):
+                        break
 
 
     def connect_to_bootstrap_node(self, bootstrap_ip, bootstrap_port):
@@ -130,10 +139,10 @@ class P2P:
     def p2p_network_init(self):
 
         # BOOTSTRAP NODE
-        if (self.port == 40000):
+        if ((self.id, self.port) == self.bootstrap_node):
             self.id = "id0"
             self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.pub_key, 'balance': 0, 'stake': 10}}
-            self.blockchain.create_genesis_transaction()    # NEW
+            self.blockchain.create_genesis_transaction()
             self.bootstrap_mode()
             threading.Thread(target=self.start_listening).start()
             time.sleep(2)
