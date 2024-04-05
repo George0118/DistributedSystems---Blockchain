@@ -1,6 +1,6 @@
 """Stores and manages lots"""
 
-from BlockChainUtils import BlockChainUtils
+from utils import BlockChainUtils
 
 
 class Lot:

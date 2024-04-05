@@ -1,9 +1,9 @@
-from P2P import P2P
+from p2p import P2P
 import pickle
 import json
 import threading
-from Wallet import Wallet
-from Commands import process_command
+from wallet import Wallet
+from commands import process_command
 
 class Node:
     # Class that represents the each node of the cluster    

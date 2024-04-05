@@ -1,8 +1,8 @@
 """Consensus algorithm - keeps track of amount of stake of each account 
 (to decide who is the next validator)"""
 
-from BlockChainUtils import BlockChainUtils
-from Lot import Lot
+from utils import BlockChainUtils
+from lot import Lot
 
 
 class ProofOfStake:

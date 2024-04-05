@@ -1,11 +1,10 @@
 """For creating and managing a linked list of chain"""
 
-from Block import Block
-from BlockChainUtils import BlockChainUtils
-from AccountModel import AccountModel
-from ProofOfStake import ProofOfStake
+from block import Block
+from utils import BlockChainUtils
+from proof_of_stake import ProofOfStake
 
-from Transaction import Transaction
+from transaction import Transaction
 from config import N
 
 
@@ -14,9 +13,7 @@ class Blockchain:
 
     def __init__(self):
         self.chain = [Block.genesis()]
-        self.account_model = (
-            AccountModel()
-        )  # Blockchain is aware of all of the accounts
+
         self.pos = ProofOfStake()
         self.chain[0].transactions.append(self.create_genesis_transaction())
 

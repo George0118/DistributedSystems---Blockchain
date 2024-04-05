@@ -3,7 +3,7 @@ import json
 import threading
 import time
 import pickle
-from BlockChainUtils import BlockChainUtils
+from utils import BlockChainUtils
 from config import N
 
 # from Wallet import Wallet

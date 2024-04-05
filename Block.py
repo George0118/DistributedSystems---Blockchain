@@ -1,9 +1,9 @@
 """For creating and managing blocks - a container that holds data (including transactions)"""
 
 import time
-from BlockChainUtils import BlockChainUtils
+from utils import BlockChainUtils
 from typing import List
-from Transaction import Transaction
+from transaction import Transaction
 CAPACITY = 5
 
 

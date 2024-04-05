@@ -1,14 +1,14 @@
 from Crypto.PublicKey import RSA    # pycryptodome
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
-from Transaction import Transaction
-from Block import Block
-from TranscationPool import TransactionPool
-from Message import Message
+from transaction import Transaction
+from block import Block
+from transaction_pool import TransactionPool
+from mesasage import Message
 import json
-from BlockChainUtils import BlockChainUtils
-from ProofOfStake import ProofOfStake
-from Blockchain import Blockchain
+from utils import BlockChainUtils
+from proof_of_stake import ProofOfStake
+from blockchain import Blockchain
 from config import N
 
 class Wallet:
