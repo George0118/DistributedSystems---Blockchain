@@ -3,7 +3,6 @@ import pickle
 import json
 import threading
 from wallet import Wallet
-from blockchain import Blockchain
 from commands import process_command
 
 class Node:
@@ -40,11 +39,13 @@ class Node:
                                                     arguments.get("amount", 0),  # Use default value if "amount" key is not present
                                                     arguments.get("message", "")  # Use default value if "data" key is not present
                                                 )
-                
-                self.wallet.broadcast_transaction(transaction_to_send)
+                if self.wallet.check_transaction(transaction_to_send) is not None:
+                    self.wallet.broadcast_transaction(transaction_to_send)
 
                 if self.wallet.transaction_pool.validation_required():
-                    self.wallet.mint_block()
+                    block = self.wallet.mint_block()
+                    if block is not None:
+                        self.wallet.broadcast_block(block)
 
     def blockchaining(self):
 

@@ -11,6 +11,7 @@ class TransactionPool:
     def add_transaction(self, transaction):
         """Adds transaction to list"""
         self.transactions.append(transaction)
+        print(len(self.transactions))
 
     def transaction_exists(self, transaction):
         """Checks if a transaction exists in the list"""

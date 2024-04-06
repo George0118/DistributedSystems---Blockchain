@@ -40,7 +40,7 @@ class P2P:
     def handle_connection(self, peer_socket, peer_id):
         while True:
             # Receive data from the client
-            data = peer_socket.recv(4096)
+            data = peer_socket.recv(40960)
             # Unpickle the received data
             message = pickle.loads(data)
             if message:
@@ -48,9 +48,9 @@ class P2P:
                 if decoded_message.message_type == "TRANSACTION":
                     self.wallet.handle_transaction(decoded_message.data)
                 elif decoded_message.message_type == "BLOCK":
-                    self.wallet.handle_block(decoded_message.data, peer_id)
+                    self.wallet.handle_block(decoded_message.data)
                 else:
-                    self.wallet.handle_blockchain(decoded_message.data, peer_id)
+                    self.wallet.handle_blockchain(decoded_message.data)
 
 
     def connect_to_all_peers(self):
