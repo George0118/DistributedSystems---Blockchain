@@ -1,6 +1,7 @@
 from Crypto.PublicKey import RSA    # pycryptodome
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
+import pickle
 from transaction import Transaction
 from block import Block
 from transaction_pool import TransactionPool
@@ -19,8 +20,9 @@ class Wallet:
         self.transaction_pool = TransactionPool()
         self.pos = ProofOfStake()
 
-    def set_peers(self, peers):
+    def set_peers(self, peers, nodes):
         self.peers = peers
+        self.nodes = nodes
 
     def set_blockchain(self, blockchain):
         self.blockchain = blockchain
@@ -29,6 +31,9 @@ class Wallet:
         key = RSA.generate(2048)
         self.private_key = key.export_key().decode('utf-8')
         self.public_key = key.publickey().export_key().decode('utf-8')
+
+
+    # ============================ TRANSACTION ============================ #
     
     def sign_transaction(self, transaction_data):
         private_key_obj = RSA.import_key(self.private_key)
@@ -46,7 +51,6 @@ class Wallet:
             return True
         except (ValueError, TypeError):
             return False
-    ## https://www.pycryptodome.org/src/signature/pkcs1_v1_5
         
 
     def create_transaction(self, receiver_address, type, amount, message):
@@ -56,13 +60,6 @@ class Wallet:
         self.nonce += 1
         return transaction
 
-    # def createBlock(self, transactions, lastHash, blockCount):
-    #     block = Block(transactions, lastHash,
-    #                     self.publicKeyString(), blockCount)
-    #     signature = self.sign(block.payload())
-    #     block.sign(signature)
-    #     return block
-
     def check_transaction(self, transaction:Transaction):
         """
         Checks if transaction is valid and does not already exist - if valid it broadcasts it
@@ -70,6 +67,7 @@ class Wallet:
         if self.validate_transaction(transaction):
             # If the signature is valid and the transaction is new, it is added to the pool
             self.transaction_pool.add_transaction(transaction)
+            self.execute_transaction(transaction)
             message = Message("TRANSACTION", transaction)
             encoded_message = BlockChainUtils.encode(message)
             if self.transaction_pool.validation_required():
@@ -87,6 +85,7 @@ class Wallet:
             # If the signature is valid and the transaction is new, it is added to the pool
             self.transaction_pool.add_transaction(transaction)
             self.execute_transaction(transaction)
+            print(self.peers)
         else:
             print("Invalid transaction") 
 
@@ -119,11 +118,21 @@ class Wallet:
             return True
         else:
             return False
+        
+    def broadcast_transaction(self, transaction: Transaction):
+        """ Broadcasts Transaction """
+        message = self.check_transaction(transaction)
+
+        if message is not None:
+            message = pickle.dumps(message)
+            for socket in self.nodes.values():
+                socket.sendall(message)
     
     def execute_transaction(self, transaction:Transaction):
         """ Executes a Transaction saving its changes to the wallets"""
         # If the transaction is Exchange or Initialization then remove from sender balance and add to receiver
-        if transaction.type == "Exchange" or transaction.type == "Initialization":      
+        if transaction.type == "Exchange" or transaction.type == "Initialization":    
+            print("hi")  
             receiver_id = None
             sender_id = None
             for id, dict_id in self.peers.items():
@@ -142,6 +151,17 @@ class Wallet:
                     sender_id = id
             
             self.peers[sender_id]["balance"] -= (transaction.amount - self.peers[sender_id]["stake"])
+
+    def initial_distribution(self):
+        """ Executes initialization transactions to all peers only from 0 so everyone has 1000 balance """
+        for i in range(N):
+            if i != 0:
+                receiver_address = self.peers['id'+ str(i)]["public_key"]
+                transaction = self.create_transaction(receiver_address, "Initialization", 1000, "")
+                self.broadcast_transaction(transaction)
+
+
+    # ========================= BLOCK ========================== #
 
     def handle_block(self, block:Block, sender):
         """

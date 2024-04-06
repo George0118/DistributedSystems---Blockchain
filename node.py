@@ -14,19 +14,13 @@ class Node:
         self.wallet = Wallet()
         self.p2p = P2P(self.ip, self.port, self.wallet)
         self.p2p.p2p_network_init()
-        self.wallet.set_peers(self.p2p.peers)
+        self.wallet.set_peers(self.p2p.peers, self.p2p.nodes)
         self.wallet.set_blockchain(self.p2p.blockchain)
         # self.wallet.set_blockchain(self.p2p.blockchain)
         self.p2p.set_wallet(self.wallet)
-        print(self.p2p.peers)
 
         # Start Blockchaining
         self.blockchaining()
-
-    def broadcast_message(p2p, message):
-        for id, socket in p2p.nodes.items():
-            if id != p2p.id:
-                socket.send(json.dumps(message).encode())
 
     def command_reading(self):
         print(f"Ready and awaiting user commands.")
@@ -47,26 +41,18 @@ class Node:
                                                     arguments.get("message", "")  # Use default value if "data" key is not present
                                                 )
                 
-                message = self.wallet.check_transaction(transaction_to_send)
-
-                if message is not None:
-                    message = pickle.dumps(message)
-                    for socket in self.p2p.nodes.values():
-                        socket.sendall(message)
+                self.wallet.broadcast_transaction(transaction_to_send)
 
                 if self.wallet.transaction_pool.validation_required():
                     self.wallet.mint_block()
 
     def blockchaining(self):
 
-        # print("My current connections are:")
-        # for n in self.p2p.nodes.values():
-        #     print(n)
-
-        while self.wallet is None:
-            pass
+        if self.p2p.id == 'id0':
+            self.wallet.initial_distribution()
 
         # Command Reading Thread
+        print(self.p2p.peers)
         command_reading_thread = threading.Thread(target=self.command_reading)
         command_reading_thread.start()
                 

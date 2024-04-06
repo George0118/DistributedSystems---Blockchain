@@ -70,14 +70,6 @@ class P2P:
                 except Exception as e:
                     print(f"Error connecting to peer {peer_id}: {e}")
 
-            if ((self.id, self.port) == self.bootstrap_node):
-                # MAKE AND SEND TRANSATION
-                pass
-            else:
-                while True:
-                    if (self.peers[self.id]['balance'] < 1000):
-                        break
-
 
     def connect_to_bootstrap_node(self, bootstrap_ip, bootstrap_port):
         bootstrap_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -141,7 +133,7 @@ class P2P:
         # BOOTSTRAP NODE
         if ((self.ip, self.port) == self.bootstrap_node):
             self.id = "id0"
-            self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.public_key, 'balance': 0, 'stake': 10}}
+            self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.public_key, 'balance': N*1000, 'stake': 10}}
             self.blockchain = Blockchain(self.wallet.public_key)
             self.bootstrap_mode()
             threading.Thread(target=self.start_listening).start()
