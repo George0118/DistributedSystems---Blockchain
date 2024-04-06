@@ -21,6 +21,9 @@ class Wallet:
 
     def set_peers(self, peers):
         self.peers = peers
+
+    def set_blockchain(self, blockchain):
+        self.blockchain = blockchain
     
     def generate_wallet(self):
         key = RSA.generate(2048)

@@ -12,10 +12,10 @@ class Node:
         self.ip = ip
         self.port = port
         self.wallet = Wallet()
-        self.blockchain = Blockchain()
-        self.p2p = P2P(self.ip, self.port, self.wallet, self.blockchain)
+        self.p2p = P2P(self.ip, self.port, self.wallet)
         self.p2p.p2p_network_init()
         self.wallet.set_peers(self.p2p.peers)
+        self.wallet.set_blockchain(self.p2p.blockchain)
         # self.wallet.set_blockchain(self.p2p.blockchain)
         self.p2p.set_wallet(self.wallet)
         print(self.p2p.peers)

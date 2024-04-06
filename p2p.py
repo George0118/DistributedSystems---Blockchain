@@ -1,32 +1,32 @@
 import socket
 import json
+import jsonpickle
 import threading
 import time
 import pickle
 from utils import BlockChainUtils
+from blockchain import Blockchain
 from config import N
 
 # from Wallet import Wallet
 
 # Class for the bootstrapping and "node-discovery" (represents all nodes' process, including bootstrap's)
 class P2P:
-    def __init__(self, ip, port, wallet, blockchain):
-        #self.id = None
+    def __init__(self, ip, port, wallet):
         self.ip = ip
         self.port = port
-        self.pub_key = wallet.pub_key
-        #self.peers = None     # Dictionary of peers' id: {'ip': ip, 'port': port, 'pub_key': pub_key, 'amount': amount, 'stake': stake}
+        self.public_key = wallet.public_key
+        self.peers = None     # Dictionary of peers' id: {'ip': ip, 'port': port, 'public_key': public_key, 'balance': balance, 'stake': stake}
         self.nodes = {}       # Dictionary of nodes' id: sending_socket}
         self.bootstrap_node = ("127.0.0.1", 40000)
         self.cluster_size = N
         self.wallet = wallet
-        self.blockchain = blockchain
 
         self.listening_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listening_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)        
         self.listening_socket.bind((self.ip, self.port))
 
-    def set_wallet(self, wallet):   # ?
+    def set_wallet(self, wallet):
         self.wallet = wallet
 
     def start_listening(self):
@@ -75,7 +75,7 @@ class P2P:
                 pass
             else:
                 while True:
-                    if (self.peers[self.id]['amount'] < 1000):
+                    if (self.peers[self.id]['balance'] < 1000):
                         break
 
 
@@ -84,22 +84,22 @@ class P2P:
         bootstrap_socket.connect((bootstrap_ip, bootstrap_port))
 
         # Receive my ID and Blockchain-so-far (only Genesis Block)
-        id_blockchain_json = bootstrap_socket.recv(1024).decode()
+        id_blockchain_json = bootstrap_socket.recv(4096).decode()
         id_blockchain = json.loads(id_blockchain_json)
         self.id = id_blockchain['id']
-        self.blockchain = id_blockchain['blockchain']
+        self.blockchain = jsonpickle.decode(id_blockchain['blockchain'])
 
         # Send my info: ip, port and public key
         ip_port_pubkey = {
             'ip': self.ip,
             'port': self.port,
-            'pub_key': self.pub_key
+            'public_key': self.public_key
         }
         bootstrap_socket.send(json.dumps(ip_port_pubkey).encode())
 
         # Receive peers' infos
         peers_info_json = bootstrap_socket.recv(40960).decode()
-        # Update self.peers (id, ip, port and pub_key)
+        # Update self.peers (id, ip, port and public_key)
         self.peers = json.loads(peers_info_json)
         
         bootstrap_socket.close()
@@ -116,17 +116,18 @@ class P2P:
 
             id_blockchain = {
                 'id': id,
-                'blockchain': self.blockchain
+                'blockchain': jsonpickle.encode(self.blockchain)
             }
+
             temp_socket.send(json.dumps(id_blockchain).encode())
             
             ip_port_pubkey_json = temp_socket.recv(1024).decode()
             ip_port_pubkey = json.loads(ip_port_pubkey_json)
             ip = ip_port_pubkey['ip']
             port = ip_port_pubkey['port']
-            pub_key = ip_port_pubkey['pub_key']
+            public_key = ip_port_pubkey['public_key']
 
-            self.peers[id] = {'ip': ip, 'port': port, 'public_key': pub_key, 'balance': 0, 'stake': 10}
+            self.peers[id] = {'ip': ip, 'port': port, 'public_key': public_key, 'balance': 0, 'stake': 10}
 
             temp_sockets.append(temp_socket)            
             i += 1
@@ -135,17 +136,16 @@ class P2P:
             socket.send(json.dumps(self.peers).encode())
 
 
-
     def p2p_network_init(self):
 
         # BOOTSTRAP NODE
-        if ((self.id, self.port) == self.bootstrap_node):
+        if ((self.ip, self.port) == self.bootstrap_node):
             self.id = "id0"
-            self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.pub_key, 'balance': 0, 'stake': 10}}
-            self.blockchain.create_genesis_transaction()
+            self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.public_key, 'balance': 0, 'stake': 10}}
+            self.blockchain = Blockchain(self.wallet.public_key)
             self.bootstrap_mode()
             threading.Thread(target=self.start_listening).start()
-            time.sleep(2)
+            time.sleep(0.5)
             self.connect_to_all_peers()
             print("End of bootstrapping phase!")
         
@@ -153,6 +153,6 @@ class P2P:
         else:
             self.connect_to_bootstrap_node(self.bootstrap_node[0], self.bootstrap_node[1])
             threading.Thread(target=self.start_listening).start()
-            time.sleep(2)
+            time.sleep(0.5)
             self.connect_to_all_peers()
             print("End of bootstrapping phase!")
