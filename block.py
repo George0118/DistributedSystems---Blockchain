@@ -2,8 +2,6 @@
 
 import time
 from utils import BlockChainUtils
-from typing import List
-from transaction import Transaction
 CAPACITY = 5
 
 
@@ -12,7 +10,7 @@ class Block:
     For creating and managing blocks - a container that holds data (including transactions)
     """
 
-    def __init__(self, transactions:List[Transaction], previous_hash, validator, index):
+    def __init__(self, transactions, previous_hash, validator, index):
         self.index = index
         self.timestamp = time.time()
         self.transactions = transactions
@@ -52,12 +50,6 @@ class Block:
         """
         Creates hash of block
         """
-        return BlockChainUtils.hash(self.payload()).hexdigest()
-
-    def payload(self):
-        """
-        Generates same dictionary as to_dict method but without current_hash
-        """
         data = {}
         data["index"] = self.index
         data["previous_hash"] = self.previous_hash
@@ -67,7 +59,7 @@ class Block:
         for transaction in self.transactions:
             json_transactions.append(transaction.to_dict())
         data["transactions"] = json_transactions
-        return data
+        return BlockChainUtils.hash(data).hexdigest()
 
     def is_full(self):
         """

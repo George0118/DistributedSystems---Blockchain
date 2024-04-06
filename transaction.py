@@ -73,20 +73,3 @@ class Transaction:
         Check if two transactions are equal.
         """
         return self.transaction_id == transaction.transaction_id
-    
-    def payload(self):
-        """
-        Generate the payload for the transaction.
-        """
-        return {
-            'type': self.type,
-            'receiver': self.receiver_address,
-            'sender': self.sender_address,
-            'nonce': self.nonce,
-            'fee': self.fee,
-            'amount': self.amount,
-            'message': self.message,
-            'transaction_id': self.transaction_id
-        }
-
-    
