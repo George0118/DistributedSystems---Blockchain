@@ -31,7 +31,10 @@ class Node:
                 arguments = json.loads(arguments)
 
                 # Given the user id find its public key from your dictionary
-                receiver_address = self.p2p.peers[arguments["receiver"]]["public_key"]
+                if arguments["type"] != "Stake":
+                    receiver_address = self.p2p.peers[arguments["receiver"]]["public_key"]
+                else:
+                    receiver_address = 0
 
                 transaction_to_send = self.wallet.create_transaction(
                                                     receiver_address,

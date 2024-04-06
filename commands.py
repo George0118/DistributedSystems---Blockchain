@@ -1,7 +1,7 @@
 import json
 
 def process_command(string):
-    splits = string.split(" ")
+    splits = string.split(" ", 2)
     command_info = {}
 
     if splits[0] == "t":
@@ -15,9 +15,9 @@ def process_command(string):
         command_info["message"] = splits[2]
 
     elif splits[0] == "stake":
-        command_info["receiver"] = splits[1]
+        command_info["receiver"] = 0
         command_info["type"] = "Stake"
-        command_info["amount"] = int(splits[2])
+        command_info["amount"] = int(splits[1])
 
     else:
         print(f"\nUnknown command {splits[0]}")

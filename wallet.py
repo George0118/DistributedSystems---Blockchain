@@ -192,7 +192,7 @@ class Wallet:
                 block.transactions
             )
             # And add the block to the blockchain
-            self.update_stakes(block)
+            self.stakes_and_messages(block)
             fees = self.blockchain.add_block(block)
             validator_id = None
             for id, dict in self.peers.items():
@@ -238,14 +238,21 @@ class Wallet:
             self.transaction_pool.remove_from_pool(
                 self.transaction_pool.transactions
             )  # Clears transaction pool by removing all transactions added to block
-            self.update_stakes(block)
+            self.stakes_and_messages(block)
+            fees = self.blockchain.add_block(block)
+            validator_id = None
+            for id, dict in self.peers.items():
+                if dict["public_key"] == block.validator:
+                    validator_id = id
+                    break
+            self.peers[validator_id]["balance"] += fees
             
             return block
         else:
             print("I am not the validator")
             return None
         
-    def update_stakes(self, block:Block):
+    def stakes_and_messages(self, block:Block):
         for transaction in block.transactions:
             if transaction.type == "Stake":
                 change_id = None
@@ -253,6 +260,12 @@ class Wallet:
                     if dict_id["public_key"] == transaction.sender_address:
                         change_id = id
                 self.peers[change_id]["stake"] = transaction.amount
+            if transaction.type == "Exchange" and transaction.message != "" and self.public_key == transaction.receiver_address:
+                sender_id = None
+                for id, dict_id in self.peers.items():
+                    if dict_id["public_key"] == transaction.sender_address:
+                        sender_id = id
+                print("User with ID", sender_id, "messaged you:", transaction.message)
 
         # And also update the POS stakes
         stakes_dict = {}
