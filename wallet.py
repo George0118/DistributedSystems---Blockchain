@@ -28,6 +28,12 @@ class Wallet:
             stakes_dict[id] = dict["stake"]
         self.pos.set_stakes(stakes_dict)
 
+        self.id = None
+        for id, dict in self.peers.items():
+            if dict["public_key"] == self.public_key:
+                self.id = id
+                break
+
     def set_blockchain(self, blockchain:Blockchain):
         self.blockchain = blockchain
     
@@ -74,7 +80,7 @@ class Wallet:
             self.execute_transaction(transaction)
             return transaction
         else:
-            print("Invalid transaction")
+            print(f"{self.id}: Invalid transaction")
             return None
         
     def handle_transaction(self, transaction:Transaction):
@@ -90,7 +96,7 @@ class Wallet:
                     if block is not None:
                         self.broadcast_block(block)
         else:
-            print("Invalid transaction") 
+            print(f"{self.id}: Invalid transaction") 
 
     def validate_transaction(self, transaction:Transaction):
         """
@@ -201,7 +207,7 @@ class Wallet:
                     break
             self.peers[validator_id]["balance"] += fees
         else:
-            print("Invalid block")   
+            print(f"{self.id}: Invalid block")   
     
     def validate_block(self, block:Block):
         """
@@ -232,7 +238,7 @@ class Wallet:
         validator_id = self.pos.validator(prev_hash)
         validator_pk = self.peers[validator_id]["public_key"]
         if validator_pk == self.public_key:
-            print("I am the validator")
+            print(f"{self.id}: I am the validator")
             index = self.blockchain.next_index()
             block = Block(self.transaction_pool.transactions, prev_hash, validator_pk, index)
             self.transaction_pool.remove_from_pool(
@@ -249,7 +255,7 @@ class Wallet:
             
             return block
         else:
-            print("I am not the validator")
+            print(f"{self.id}: I am not the validator")
             return None
         
     def stakes_and_messages(self, block:Block):
@@ -265,7 +271,7 @@ class Wallet:
                 for id, dict_id in self.peers.items():
                     if dict_id["public_key"] == transaction.sender_address:
                         sender_id = id
-                print("User with ID", sender_id, "messaged you:", transaction.message)
+                print(f"{self.id}: User with ID", sender_id, "messaged you:", transaction.message)
 
         # And also update the POS stakes
         stakes_dict = {}

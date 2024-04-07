@@ -29,16 +29,18 @@ class P2P:
     def set_wallet(self, wallet):
         self.wallet = wallet
 
-    def start_listening(self):
+    def start_listening(self, stop_event):
         self.listening_socket.listen(10)
-        while True:
+        while not stop_event.is_set():
             peer_listening_socket, client_address = self.listening_socket.accept()
             data = peer_listening_socket.recv(1024).decode()
             peer_id = json.loads(data)
-            threading.Thread(target=self.handle_connection, args=(peer_listening_socket,peer_id,)).start()
+            t= threading.Thread(target=self.handle_connection, args=(peer_listening_socket, peer_id, stop_event,))
+            t.daemon = True
+            t.start()
     
-    def handle_connection(self, peer_socket, peer_id):
-        while True:
+    def handle_connection(self, peer_socket, peer_id, stop_event):
+        while not stop_event.is_set():
             # Receive data from the client
             data = peer_socket.recv(40960)
             # Unpickle the received data
@@ -58,17 +60,17 @@ class P2P:
             if peer_id != self.id:
                 peer_ip = peer_info['ip']
                 peer_port = peer_info['port']
-                print(f"Attempting to connect to peer {peer_id} at {peer_ip}:{peer_port}...")
+                print(f"{self.id}: Attempting to connect to peer {peer_id} at {peer_ip}:{peer_port}...")
                 try:
                     peer_send_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     peer_send_socket.connect((peer_ip, peer_port))
                     peer_send_socket.send(json.dumps(self.id).encode())
                     self.nodes[peer_id] = peer_send_socket
-                    print(f"Successfully connected to peer {peer_id}.")
+                    print(f"{self.id}: Successfully connected to peer {peer_id}.")
                 except ConnectionRefusedError:
-                    print(f"Connection to peer {peer_id} at {peer_ip}:{peer_port} refused.")
+                    print(f"{self.id}: Connection to peer {peer_id} at {peer_ip}:{peer_port} refused.")
                 except Exception as e:
-                    print(f"Error connecting to peer {peer_id}: {e}")
+                    print(f"{self.id}: Error connecting to peer {peer_id}: {e}")
 
 
     def connect_to_bootstrap_node(self, bootstrap_ip, bootstrap_port):
@@ -128,7 +130,7 @@ class P2P:
             socket.send(json.dumps(self.peers).encode())
 
 
-    def p2p_network_init(self):
+    def p2p_network_init(self, stop_event):
 
         # BOOTSTRAP NODE
         if ((self.ip, self.port) == self.bootstrap_node):
@@ -136,15 +138,19 @@ class P2P:
             self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.public_key, 'balance': N*1000, 'stake': 10}}
             self.blockchain = Blockchain(self.wallet.public_key)
             self.bootstrap_mode()
-            threading.Thread(target=self.start_listening).start()
+            t = threading.Thread(target=self.start_listening, args=(stop_event,))
+            t.daemon = True
+            t.start()
             time.sleep(0.5)
             self.connect_to_all_peers()
-            print("End of bootstrapping phase!")
+            print(f"{self.id}: End of bootstrapping phase!")
         
         # NON-BOOTSTRAP NODES
         else:
             self.connect_to_bootstrap_node(self.bootstrap_node[0], self.bootstrap_node[1])
-            threading.Thread(target=self.start_listening).start()
+            t = threading.Thread(target=self.start_listening, args=(stop_event,))
+            t.daemon = True
+            t.start()
             time.sleep(0.5)
             self.connect_to_all_peers()
-            print("End of bootstrapping phase!")
+            print(f"{self.id}: End of bootstrapping phase!")
