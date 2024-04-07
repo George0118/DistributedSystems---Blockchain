@@ -61,6 +61,21 @@ class Block:
         data["transactions"] = json_transactions
         return BlockChainUtils.hash(data).hexdigest()
 
+    def payload(self):
+        """
+        Generates same dictionary as to_dict method but without current_hash
+        """
+        data = {}
+        data["index"] = self.index
+        data["previous_hash"] = self.previous_hash
+        data["validator"] = self.validator
+        data["timestamp"] = self.timestamp
+        json_transactions = []
+        for transaction in self.transactions:
+            json_transactions.append(transaction.to_dict())
+        data["transactions"] = json_transactions
+        return data
+    
     def is_full(self):
         """
         Checks if the block is full
