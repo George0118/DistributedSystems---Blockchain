@@ -324,8 +324,33 @@ class Wallet:
             for socket in self.nodes.values():
                 socket.sendall(message)
 
+    def broadcast_blockchain(self, blockchain:Blockchain):
+        """ Broadcasts Block """
+        message = Message("BLOCKCHAIN", blockchain)
+        message = BlockChainUtils.encode(message)
 
-        
-        
-        
+        if message is not None:
+            message = pickle.dumps(message)
+            for socket in self.nodes.values():
+                socket.sendall(message)
+
+    def handle_blockchain(self, blockchain:Blockchain):
+        """
+        Checks if blockchain is valid - if valid it replaces your blockchain
+        """
+        if self.validate_blockchain(blockchain):
+            self.blockchain = blockchain
+        else:
+            print(f"{self.id}: Invalid blockchain")
+
+    def validate_blockchain(self, blockchain:Blockchain):
+        """
+        Validates a blockchain
+        """
+        for block in blockchain.chain:
+            if block.index == 0:
+                continue
+            if not self.validate_block(block):
+                return False
+        return True
 
