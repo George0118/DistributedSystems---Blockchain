@@ -354,3 +354,19 @@ class Wallet:
                 return False
         return True
 
+
+    def view_block(self):
+        """
+        Returns last block's transactions and its validator's id
+        """
+        last_valid_block = self.blockchain[-1]
+        last_block_transactions = last_valid_block.transactions
+        last_validator_by_key = last_valid_block.validator
+
+        for last_validator_id, data in self.peers.items():
+            if data["public_key"] == last_validator_by_key:
+                return last_validator_id, last_block_transactions
+        return None
+    
+    def my_balance(self):
+        return self.peers[self.id]["balance"]

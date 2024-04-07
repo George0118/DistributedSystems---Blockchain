@@ -29,6 +29,25 @@ class Node:
             try:
                 command = input_queue.get_nowait()
                 if len(command.strip()) != 0:
+                    # if command == "view":
+                    #     last_block_transactions, last_validator_id = self.wallet.view_block()
+                    #     print("Last validated block's transactions:")
+                    #     for transaction in last_block_transactions:
+                    #         print(transaction)
+                    #     print("With validator (by id): ", last_validator_id)
+
+                    # elif command == "balance":
+                    #     balance = self.wallet.my_balance()
+                    #     print("My balance is: ", balance, " BCCs")
+
+                    # elif command == "help":
+                    #     print("Acceptable commands:")
+                    #     print("t <number>: Perform a transaction with the specified amount")
+                    #     print("m <text>: Send a message with the provided text")
+                    #     print("stake <number>: Stake the specified amount")
+                    #     print("view: View the last validated block's transactions and validator")
+                    #     print("balance: View your current balance (up to the last validated block)")
+                    # else:
                     arguments = process_command(command)
                     arguments = json.loads(arguments)
 
