@@ -24,8 +24,10 @@ class Wallet:
         self.peers = peers
         self.nodes = nodes
         stakes_dict = {}
+        self.temp_balance = {}
         for id, dict in self.peers.items():
             stakes_dict[id] = dict["stake"]
+            self.temp_balance[id] = 0
         self.pos.set_stakes(stakes_dict)
 
         self.id = None
@@ -77,7 +79,7 @@ class Wallet:
         if self.validate_transaction(transaction):
             # If the signature is valid and the transaction is new, it is added to the pool
             self.transaction_pool.add_transaction(transaction)
-            self.execute_transaction(transaction)
+            self.temp_execute_transaction(transaction)
             return transaction
         else:
             print(f"{self.id}: Invalid transaction")
@@ -90,7 +92,7 @@ class Wallet:
         if self.validate_transaction(transaction):
             # If the signature is valid and the transaction is new, it is added to the pool
             self.transaction_pool.add_transaction(transaction)
-            self.execute_transaction(transaction)
+            self.temp_execute_transaction(transaction)
             if self.transaction_pool.validation_required():
                     block = self.mint_block()
                     if block is not None:
@@ -161,6 +163,29 @@ class Wallet:
             
             self.peers[sender_id]["balance"] -= (transaction.amount - self.peers[sender_id]["stake"])
 
+    def temp_execute_transaction(self, transaction:Transaction):
+        """ Executes a Transaction saving its changes to the wallets"""
+        # If the transaction is Exchange or Initialization then remove from sender balance and add to receiver
+        if transaction.type == "Exchange" or transaction.type == "Initialization":    
+            receiver_id = None
+            sender_id = None
+            for id, dict_id in self.peers.items():
+                if dict_id["public_key"] == transaction.receiver_address:
+                    receiver_id = id
+                if dict_id["public_key"] == transaction.sender_address:
+                    sender_id = id
+            
+            self.temp_balance[sender_id]["balance"] -= (transaction.amount + transaction.fee)
+            self.temp_balance[receiver_id]["balance"] += transaction.amount
+
+        elif transaction.type == "Stake":       # If the transaction is Stake then remove the money from the balance
+            sender_id = None
+            for id, dict_id in self.peers.items():
+                if dict_id["public_key"] == transaction.sender_address:
+                    sender_id = id
+            
+            self.temp_balance[sender_id]["balance"] -= (transaction.amount - self.peers[sender_id]["stake"])
+    
     def initial_distribution(self):
         """ Executes initialization transactions to all peers only from 0 so everyone has 1000 balance """
         for i in range(N):
@@ -244,6 +269,7 @@ class Wallet:
             self.transaction_pool.remove_from_pool(
                 self.transaction_pool.transactions
             )  # Clears transaction pool by removing all transactions added to block
+            self.fix_balances()
             self.stakes_and_messages(block)
             fees = self.blockchain.add_block(block)
             validator_id = None
@@ -255,9 +281,18 @@ class Wallet:
             
             return block
         else:
+            self.fix_temp_balances()
             print(f"{self.id}: I am not the validator")
             return None
-        
+
+    def fix_balances(self):
+        for id, balance in self.temp_balance.items():
+            self.peers[id]["balance"] = balance
+
+    def fix_temp_balances(self):
+        for id, data in self.peers.items():
+            self.temp_balance[id] = data["balance"]
+    
     def stakes_and_messages(self, block:Block):
         for transaction in block.transactions:
             if transaction.type == "Stake":
