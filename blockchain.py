@@ -2,8 +2,6 @@
 
 from block import Block
 from utils import BlockChainUtils
-from proof_of_stake import ProofOfStake
-
 from transaction import Transaction
 from config import N
 
