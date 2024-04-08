@@ -1,5 +1,10 @@
 import sys
 from node import Node
+from queue import Queue
+import threading
 
-def main(ip, port, input_queue, stop_event):
-    node = Node(ip, port, input_queue, stop_event)
+if __name__ == '__main__':
+    ip = sys.argv[1]
+    port = int(sys.argv[2])
+    
+    node = Node(ip, port)

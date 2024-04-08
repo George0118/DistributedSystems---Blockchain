@@ -8,40 +8,40 @@ from commands import process_command
 
 class Node:
     # Class that represents the each node of the cluster    
-    def __init__(self, ip, port, input_queue: Queue, stop_event):
+    def __init__(self, ip, port):
         self.ip = ip
         self.port = port
         self.wallet = Wallet()
         self.p2p = P2P(self.ip, self.port, self.wallet)
-        self.p2p.p2p_network_init(stop_event)
+        self.p2p.p2p_network_init()
         self.wallet.set_peers(self.p2p.peers, self.p2p.nodes)
         self.wallet.set_blockchain(self.p2p.blockchain)
         # self.wallet.set_blockchain(self.p2p.blockchain)
         self.p2p.set_wallet(self.wallet)
 
         # Start Blockchaining
-        self.blockchaining(input_queue, stop_event)
+        self.blockchaining()
 
-    def command_reading(self, input_queue: Queue, stop_event):
+    def command_reading(self,):
         print(f"{self.p2p.id}: Ready and awaiting user commands.")
-        while not stop_event.is_set():
+        while True:
             # Read command from the command line
             try:
-                command = input_queue.get_nowait()
+                command = input("> ")
                 if len(command.strip()) != 0:
                     if command == "view":
                         last_block_transactions, last_validator_id = self.wallet.view_block()
-                        print("Last validated block's transactions:")
+                        print("{self.p2p.id}: Last validated block's transactions:")
                         for transaction in last_block_transactions:
                             print(transaction)
-                        print("With validator (by id): ", last_validator_id)
+                        print("With validator (by id):", last_validator_id)
 
                     elif command == "balance":
-                        balance = self.wallet.my_balance()
-                        print("My balance is: ", balance, " BCCs")
+                        balance, stake = self.wallet.my_balance()
+                        print(f"{self.p2p.id}: My balance is:", balance, "BCCs and my stake is:", stake)
 
                     elif command == "help":
-                        print("Acceptable commands:")
+                        print("{self.p2p.id}: Acceptable commands:")
                         print("t <number>: Perform a transaction with the specified amount")
                         print("m <text>: Send a message with the provided text")
                         print("stake <number>: Stake the specified amount")
@@ -73,13 +73,13 @@ class Node:
             except Exception:
                 pass  # Queue is empty
 
-    def blockchaining(self, input_queue, stop_event):
+    def blockchaining(self):
 
         if self.p2p.id == 'id0':
             self.wallet.initial_distribution()
 
         # Command Reading Thread
-        command_reading_thread = threading.Thread(target=self.command_reading, args=(input_queue, stop_event,))
+        command_reading_thread = threading.Thread(target=self.command_reading, args=())
         command_reading_thread.start()
         command_reading_thread.join()
                 

@@ -368,4 +368,4 @@ class Wallet:
         return None
     
     def my_balance(self):
-        return self.temp_balance[self.id]
+        return self.temp_balance[self.id], self.peers[self.id]["stake"]

@@ -18,7 +18,7 @@ class P2P:
         self.public_key = wallet.public_key
         self.peers = None     # Dictionary of peers' id: {'ip': ip, 'port': port, 'public_key': public_key, 'balance': balance, 'stake': stake}
         self.nodes = {}       # Dictionary of nodes' id: sending_socket}
-        self.bootstrap_node = ("127.0.0.1", 40000)
+        self.bootstrap_node = ("python_container_0", 40000)
         self.cluster_size = N
         self.wallet = wallet
 
@@ -29,18 +29,18 @@ class P2P:
     def set_wallet(self, wallet):
         self.wallet = wallet
 
-    def start_listening(self, stop_event):
+    def start_listening(self):
         self.listening_socket.listen(10)
-        while not stop_event.is_set():
+        while True:
             peer_listening_socket, client_address = self.listening_socket.accept()
             data = peer_listening_socket.recv(1024).decode()
             peer_id = json.loads(data)
-            t= threading.Thread(target=self.handle_connection, args=(peer_listening_socket, peer_id, stop_event,))
+            t= threading.Thread(target=self.handle_connection, args=(peer_listening_socket,))
             t.daemon = True
             t.start()
     
-    def handle_connection(self, peer_socket, peer_id, stop_event):
-        while not stop_event.is_set():
+    def handle_connection(self, peer_socket):
+        while True:
             # Receive data from the client
             data = peer_socket.recv(40960)
             # Unpickle the received data
@@ -85,7 +85,7 @@ class P2P:
 
         # Send my info: ip, port and public key
         ip_port_pubkey = {
-            'ip': self.ip,
+            'ip': 'python_container_' + str(self.port - bootstrap_port),
             'port': self.port,
             'public_key': self.public_key
         }
@@ -130,15 +130,15 @@ class P2P:
             socket.send(json.dumps(self.peers).encode())
 
 
-    def p2p_network_init(self, stop_event):
+    def p2p_network_init(self):
 
         # BOOTSTRAP NODE
-        if ((self.ip, self.port) == self.bootstrap_node):
+        if (self.port == self.bootstrap_node[1]):
             self.id = "id0"
             self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.public_key, 'balance': N*1000, 'stake': 10}}
             self.blockchain = Blockchain(self.wallet.public_key)
             self.bootstrap_mode()
-            t = threading.Thread(target=self.start_listening, args=(stop_event,))
+            t = threading.Thread(target=self.start_listening, args=())
             t.daemon = True
             t.start()
             time.sleep(0.5)
@@ -148,7 +148,7 @@ class P2P:
         # NON-BOOTSTRAP NODES
         else:
             self.connect_to_bootstrap_node(self.bootstrap_node[0], self.bootstrap_node[1])
-            t = threading.Thread(target=self.start_listening, args=(stop_event,))
+            t = threading.Thread(target=self.start_listening, args=())
             t.daemon = True
             t.start()
             time.sleep(0.5)
