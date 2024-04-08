@@ -24,7 +24,7 @@ class TransactionPool:
         if Ivalidator == True:
             self.transactions = []
         else:
-            rest_transactions = list(set(self.transations) - set(transactions))
+            rest_transactions = [t1 for t1 in self.transactions if not any(t1.equals(t2) for t2 in transactions)]
             self.transactions = []
             for transaction in rest_transactions:
                 wallet.handle_transaction(transaction)
