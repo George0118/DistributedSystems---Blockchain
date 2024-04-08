@@ -8,17 +8,28 @@ from config import N
 def read_input_and_dispatch(queues, stop_event):
     time.sleep(5)
     while not stop_event.is_set():
-        user_input = input("Enter command: ").strip()
-        if user_input.lower() == "exit":
-            stop_event.set()  # Set the stop event to signal threads to exit
-            break
-        elif user_input:
+        # Assuming filenames are stored in the format "trans{N}.txt" where N is the thread ID
+        for thread_id, _ in enumerate(queues):
+            filepath = f"./inputs/input5/trans{thread_id}.txt"
             try:
-                thread_id, command = user_input.split(':')
-                thread_id = int(thread_id.strip()[2:])  # Extract thread id from input
-                queues[thread_id].put(command.strip())  # Put the command into the appropriate thread's queue
-            except ValueError:
-                print("Invalid input format. Please enter in the format 'idN: command'.")
+                with open(filepath, "r") as file:
+                    for line in file:
+                        # Parse the line to extract the thread ID and message
+                        parts = line.strip().split(" ", 2)
+                        if len(parts) == 3:
+                            message = f"{parts[1]} {parts[2]}"  # Extract the message part
+                            queues[thread_id].put(message.strip())  # Put the command into the appropriate thread's queue
+                        else:
+                            print(f"Invalid format in file {filepath}: {line.strip()}")
+            except FileNotFoundError:
+                print(f"File {filepath} not found.")
+                continue
+            except Exception as e:
+                print(f"Error reading file {filepath}: {e}")
+                continue
+
+
+
 
 if __name__ == '__main__':
     ip = sys.argv[1]
@@ -54,3 +65,4 @@ if __name__ == '__main__':
 
     # Ensure the input thread terminates
     input_thread.join()
+
