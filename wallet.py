@@ -27,7 +27,9 @@ class Wallet:
         self.temp_balance = {}
         for id, dict in self.peers.items():
             stakes_dict[id] = dict["stake"]
-            self.temp_balance[id] = 0
+
+        self.fix_temp_balances()
+
         self.pos.set_stakes(stakes_dict)
 
         self.id = None
@@ -124,7 +126,7 @@ class Wallet:
         for id, dict_id in self.peers.items():
             if dict_id["public_key"] == transaction.sender_address:
                 sender_id = id
-        current_balance = self.peers[sender_id]["balance"]
+        current_balance = self.temp_balance[sender_id]
         if current_balance >= transaction.amount + transaction.fee:
             return True
         else:
@@ -211,17 +213,14 @@ class Wallet:
         if self.validate_block(block):
             # If block is valid then execute any transactions that are in the block and not in the pool
             for transaction in block.transactions:
-                found = False
-                for pool_transaction in self.transaction_pool.transactions:
-                    if transaction.equals(pool_transaction):
-                        found = True
-                        break
-                if not found:
-                    self.execute_transaction(transaction)
+                self.execute_transaction(transaction)
+
+            self.fix_temp_balances()
 
             self.transaction_pool.remove_from_pool(
                 block.transactions
             )
+
             # And add the block to the blockchain
             self.stakes_and_messages(block)
             fees = self.blockchain.add_block(block)
@@ -231,6 +230,7 @@ class Wallet:
                     validator_id = id
                     break
             self.peers[validator_id]["balance"] += fees
+
         else:
             print(f"{self.id}: Invalid block")   
     
@@ -281,7 +281,6 @@ class Wallet:
             
             return block
         else:
-            self.fix_temp_balances()
             print(f"{self.id}: I am not the validator")
             return None
 
