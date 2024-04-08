@@ -3,6 +3,7 @@
 import time
 from utils import BlockChainUtils
 from config import CAPACITY
+from config import CAPACITY
 
 
 class Block:
