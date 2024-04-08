@@ -175,8 +175,8 @@ class Wallet:
                 if dict_id["public_key"] == transaction.sender_address:
                     sender_id = id
             
-            self.temp_balance[sender_id]["balance"] -= (transaction.amount + transaction.fee)
-            self.temp_balance[receiver_id]["balance"] += transaction.amount
+            self.temp_balance[sender_id] -= (transaction.amount + transaction.fee)
+            self.temp_balance[receiver_id] += transaction.amount
 
         elif transaction.type == "Stake":       # If the transaction is Stake then remove the money from the balance
             sender_id = None
@@ -184,7 +184,7 @@ class Wallet:
                 if dict_id["public_key"] == transaction.sender_address:
                     sender_id = id
             
-            self.temp_balance[sender_id]["balance"] -= (transaction.amount - self.peers[sender_id]["stake"])
+            self.temp_balance[sender_id] -= (transaction.amount - self.peers[sender_id]["stake"])
     
     def initial_distribution(self):
         """ Executes initialization transactions to all peers only from 0 so everyone has 1000 balance """
