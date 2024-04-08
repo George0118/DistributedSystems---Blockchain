@@ -27,6 +27,8 @@ class ProofOfStake:
 
     def validator(self, last_block_hash):
         """Finds who will be the validator and returns their public key"""
+        print(self.stakes)
         lots = self.validator_lots()
         winner_id = self.winner_lot(lots, last_block_hash)
+        print(winner_id)
         return winner_id

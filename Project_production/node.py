@@ -5,6 +5,7 @@ import json
 import threading
 from wallet import Wallet
 from commands import process_command, file_parsing
+import time
 
 class Node:
     # Class that represents the each node of the cluster    
@@ -75,12 +76,16 @@ class Node:
                                 self.wallet.broadcast_block(block)
             except Exception:
                 print("Queue is empty")
+                time.sleep(10)
                 break
 
     def blockchaining(self, input_queue, stop_event):
 
         if self.p2p.id == 'id0':
             self.wallet.initial_distribution()
+
+        time.sleep(5)
+        print(self.wallet.my_balance())
 
         # Command Reading Thread
         command_reading_thread = threading.Thread(target=self.command_reading, args=(input_queue, stop_event,))

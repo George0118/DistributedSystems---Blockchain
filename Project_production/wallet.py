@@ -11,6 +11,7 @@ import json
 from utils import BlockChainUtils
 from proof_of_stake import ProofOfStake
 from config import N
+import time
 
 class Wallet:
 
@@ -29,6 +30,8 @@ class Wallet:
             stakes_dict[id] = dict["stake"]
 
         self.fix_temp_balances()
+
+        print(stakes_dict)
 
         self.pos.set_stakes(stakes_dict)
 
@@ -193,7 +196,7 @@ class Wallet:
         for i in range(N):
             if i != 0:
                 receiver_address = self.peers['id'+ str(i)]["public_key"]
-                transaction = self.create_transaction(receiver_address, "Initialization", 1000, "")
+                transaction = self.create_transaction(receiver_address, "Initialization", 10000, "")
 
                 if self.check_transaction(transaction) is not None:
                     self.broadcast_transaction(transaction)
@@ -210,6 +213,7 @@ class Wallet:
         """
         Checks if block is valid - if valid it add it to your blockchain
         """
+
         if self.validate_block(block):
             # If block is valid then execute any transactions that are in the block and not in the pool
             for transaction in block.transactions:
@@ -247,6 +251,8 @@ class Wallet:
         block_validator = block.validator
         block_prev_hash = block.previous_hash
 
+        print(block_validator == validator_pk, block_prev_hash == prev_hash)
+
         if (
             block_validator == validator_pk
             and block_prev_hash == prev_hash
@@ -282,6 +288,7 @@ class Wallet:
             return block
         else:
             print(f"{self.id}: I am not the validator")
+            time.sleep(5)
             return None
 
     def fix_balances(self):

@@ -193,7 +193,7 @@ class Wallet:
         for i in range(N):
             if i != 0:
                 receiver_address = self.peers['id'+ str(i)]["public_key"]
-                transaction = self.create_transaction(receiver_address, "Initialization", 1000, "")
+                transaction = self.create_transaction(receiver_address, "Initialization", 10000, "")
 
                 if self.check_transaction(transaction) is not None:
                     self.broadcast_transaction(transaction)
