@@ -218,7 +218,7 @@ class Wallet:
             self.fix_temp_balances()
 
             self.transaction_pool.remove_from_pool(
-                block.transactions
+                block.transactions, False, self
             )
 
             # And add the block to the blockchain
@@ -267,7 +267,7 @@ class Wallet:
             index = self.blockchain.next_index()
             block = Block(self.transaction_pool.transactions, prev_hash, validator_pk, index)
             self.transaction_pool.remove_from_pool(
-                self.transaction_pool.transactions
+                self.transaction_pool.transactions, True
             )  # Clears transaction pool by removing all transactions added to block
             self.fix_balances()
             self.stakes_and_messages(block)

@@ -19,17 +19,15 @@ class TransactionPool:
                 return True
         return False
 
-    def remove_from_pool(self, transactions):
+    def remove_from_pool(self, transactions, Ivalidator, wallet = None):
         """Removes transactions from the pool, i.e., if they have been added to a block"""
-        new_pool_transactions = []
-        for pool_transaction in self.transactions:
-            insert = True
-            for transaction in transactions:
-                if pool_transaction.equals(transaction):
-                    insert = False
-            if insert:
-                new_pool_transactions.append(pool_transaction)
-        self.transactions = new_pool_transactions
+        if Ivalidator == True:
+            self.transactions = []
+        else:
+            rest_transactions = list(set(self.transations) - set(transactions))
+            self.transactions = []
+            for transaction in rest_transactions:
+                wallet.handle_transaction(transaction)
 
     def validation_required(self):
         """Decides if it is time to create a new block"""
