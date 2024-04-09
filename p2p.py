@@ -35,25 +35,30 @@ class P2P:
             peer_listening_socket, client_address = self.listening_socket.accept()
             data = peer_listening_socket.recv(1024).decode()
             peer_id = json.loads(data)
-            t= threading.Thread(target=self.handle_connection, args=(peer_listening_socket, peer_id, stop_event,))
+            t = threading.Thread(target=self.handle_connection, args=(peer_listening_socket, peer_id, stop_event,))
             t.daemon = True
             t.start()
     
     def handle_connection(self, peer_socket, peer_id, stop_event):
-        while not stop_event.is_set():
-            # Receive data from the client
-            data = peer_socket.recv(409600)
-            # Unpickle the received data
-            message = pickle.loads(data)
-            if message:
-                decoded_message = BlockChainUtils.decode(message)
-                if decoded_message.message_type == "TRANSACTION":
-                    self.wallet.handle_transaction(decoded_message.data)
-                elif decoded_message.message_type == "BLOCK":
-                    self.wallet.handle_block(decoded_message.data)
-                else:
-                    self.wallet.handle_blockchain(decoded_message.data)
-
+        try:
+            while not stop_event.is_set():
+                # Receive data from the client
+                data = peer_socket.recv(409600)
+                # Unpickle the received data
+                message = pickle.loads(data)
+                if message:
+                    decoded_message = BlockChainUtils.decode(message)
+                    if decoded_message.message_type == "TRANSACTION":
+                        self.wallet.handle_transaction(decoded_message.data)
+                    elif decoded_message.message_type == "BLOCK":
+                        self.wallet.handle_block(decoded_message.data)
+                    else:
+                        self.wallet.handle_blockchain(decoded_message.data)
+        except EOFError:
+            # Shutdown and close the socket when done
+            peer_socket.shutdown(socket.SHUT_RDWR)
+            peer_socket.close()
+            stop_event.set()  # Set the stop event to signal the node that nodes are starting to close
 
     def connect_to_all_peers(self):
         for peer_id, peer_info in self.peers.items():
@@ -154,3 +159,14 @@ class P2P:
             time.sleep(0.5)
             self.connect_to_all_peers()
             print(f"{self.id}: End of bootstrapping phase!")
+
+    def disconnect_sockets(self):
+        for s in self.nodes.values():
+            try:
+                # Step 1: Shutdown the socket
+                s.shutdown(socket.SHUT_RDWR)
+                # Step 2: Close the socket
+                s.close()
+            except Exception as e:
+                # Handle any exceptions gracefully
+                print(f"Error occurred while disconnecting socket: {e}")

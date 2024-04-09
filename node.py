@@ -32,7 +32,7 @@ class Node:
                         last_block_transactions, last_validator_id = self.wallet.view_block()
                         print("Last validated block's transactions:")
                         for transaction in last_block_transactions:
-                            print(transaction)
+                            print(transaction.payload())
                         print("With validator (by id): ", last_validator_id)
 
                     elif command == "balance":
@@ -80,6 +80,8 @@ class Node:
                 if block is not None:
                     self.wallet.broadcast_block(block)
                     
+        self.p2p.disconnect_sockets()
+            
         print(len(self.wallet.transaction_pool.transactions))
 
     def blockchaining(self, stop_event):

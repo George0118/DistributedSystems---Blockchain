@@ -272,8 +272,6 @@ class Wallet:
         block_validator = block.validator
         block_prev_hash = block.previous_hash
 
-        print(block_validator == validator_pk, block_prev_hash == prev_hash)
-
         if (
             block_validator == validator_pk
             and block_prev_hash == prev_hash
@@ -391,7 +389,7 @@ class Wallet:
         """
         Returns last block's transactions and its validator's id
         """
-        last_valid_block = self.blockchain[-1]
+        last_valid_block = self.blockchain.chain[-1]
         last_block_transactions = last_valid_block.transactions
         last_validator_by_key = last_valid_block.validator
 
