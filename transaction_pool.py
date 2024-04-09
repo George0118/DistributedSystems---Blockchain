@@ -23,20 +23,21 @@ class TransactionPool:
                 return True
         return False
 
-    def remove_from_pool(self, transactions, wallet = None):
+    def remove_from_pool(self, transactions):
         """Removes transactions from the pool, i.e., if they have been added to a block"""
         print("Before:", len(self.transactions))
         with self.wallet.lock:
             rest_transactions = [t1 for t1 in self.transactions if not any(t1.equals(t2) for t2 in transactions)]
             self.transactions = []
         for transaction in rest_transactions:
-            if wallet is not None:
-                wallet.handle_transaction(transaction, True)
+            if self.wallet is not None:
+                self.wallet.handle_transaction(transaction, True)
         print("After:", len(self.transactions))
 
     def validation_required(self):
         """Decides if it is time to create a new block"""
-        return len(self.transactions) >= CAPACITY
+        with self.wallet.lock:
+            return len(self.transactions) >= CAPACITY
     
     def get_length(self):
         return len(self.transactions)
