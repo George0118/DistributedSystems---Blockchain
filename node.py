@@ -29,11 +29,7 @@ class Node:
                 command = input_queue.get_nowait()
                 if len(command.strip()) != 0:
                     if command == "view":
-                        last_block_transactions, last_validator_id = self.wallet.view_block()
-                        print("Last validated block's transactions:")
-                        for transaction in last_block_transactions:
-                            print(transaction.payload())
-                        print("With validator (by id): ", last_validator_id)
+                        self.wallet.view_block()                        
 
                     elif command == "balance":
                         balance = self.wallet.my_balance()
