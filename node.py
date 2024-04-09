@@ -5,10 +5,11 @@ import json
 import threading
 from wallet import Wallet
 from commands import process_command
+import time
 
 class Node:
     # Class that represents the each node of the cluster    
-    def __init__(self, ip, port, input_queue: Queue, stop_event):
+    def __init__(self, ip, port, input_queue, stop_event):
         self.ip = ip
         self.port = port
         self.wallet = Wallet()
@@ -16,14 +17,12 @@ class Node:
         self.p2p.p2p_network_init(stop_event)
         self.wallet.set_peers(self.p2p.peers, self.p2p.nodes)
         self.wallet.set_blockchain(self.p2p.blockchain)
-        # self.wallet.set_blockchain(self.p2p.blockchain)
         self.p2p.set_wallet(self.wallet)
 
         # Start Blockchaining
         self.blockchaining(input_queue, stop_event)
 
     def command_reading(self, input_queue: Queue, stop_event):
-        print(f"{self.p2p.id}: Ready and awaiting user commands.")
         while not stop_event.is_set():
             # Read command from the command line
             try:
@@ -58,20 +57,30 @@ class Node:
                             receiver_address = 0
 
                         transaction_to_send = self.wallet.create_transaction(
-                                                            receiver_address,
-                                                            arguments["type"], 
-                                                            arguments.get("amount", 0),  # Use default value if "amount" key is not present
-                                                            arguments.get("message", "")  # Use default value if "data" key is not present
-                                                        )
+                                                        receiver_address,
+                                                        arguments["type"], 
+                                                        arguments.get("amount", 0),  # Use default value if "amount" key is not present
+                                                        arguments.get("message", "")  # Use default value if "data" key is not present
+                                                    )
+                    
                         if self.wallet.check_transaction(transaction_to_send) is not None:
                             self.wallet.broadcast_transaction(transaction_to_send)
 
-                        if self.wallet.transaction_pool.validation_required():
+                        if self.wallet.transaction_pool.validation_required() and not self.wallet.await_block:
                             block = self.wallet.mint_block()
                             if block is not None:
                                 self.wallet.broadcast_block(block)
             except Exception:
-                pass  # Queue is empty
+                pass
+
+        print(len(self.wallet.transaction_pool.transactions))
+        while self.wallet.transaction_pool.validation_required():
+            if not self.wallet.await_block:
+                block = self.wallet.mint_block()
+                if block is not None:
+                    self.wallet.broadcast_block(block)
+                    
+        print(len(self.wallet.transaction_pool.transactions))
 
     def blockchaining(self, input_queue, stop_event):
 
@@ -82,4 +91,3 @@ class Node:
         command_reading_thread = threading.Thread(target=self.command_reading, args=(input_queue, stop_event,))
         command_reading_thread.start()
         command_reading_thread.join()
-                

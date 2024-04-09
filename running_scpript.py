@@ -29,20 +29,19 @@ if __name__ == '__main__':
     # Event to signal threads to exit
     stop_event = threading.Event()
 
-    # Start the bootstrap node first
-    bootstrap_thread = threading.Thread(target=main, args=(ip, base_port, queues[0], stop_event))
-    bootstrap_thread.daemon = True
-    bootstrap_thread.start()
-
-    # Give some time for the bootstrap node to start
-    time.sleep(1)
-
     # Start a separate thread to read input and dispatch to appropriate threads
     input_thread = threading.Thread(target=read_input_and_dispatch, args=(queues, stop_event))
     input_thread.daemon = True
     input_thread.start()
 
-    threads = []
+    # Start the bootstrap node first
+    bootstrap_thread = threading.Thread(target=main, args=(ip, base_port, queues[0], stop_event))
+    bootstrap_thread.start()
+
+    # Give some time for the bootstrap node to start
+    time.sleep(1)
+
+    threads = [bootstrap_thread]
     for i in range(1, N):
         t = threading.Thread(target=main, args=(ip, base_port+i, queues[i], stop_event))
         threads.append(t)
