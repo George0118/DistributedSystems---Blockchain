@@ -390,7 +390,7 @@ class Wallet:
         """
         Returns last block's transactions and its validator's id
         """
-        last_valid_block = self.blockchain[-1]
+        last_valid_block = self.blockchain.chain[-1]
         last_block_transactions = last_valid_block.transactions
         last_validator_by_key = last_valid_block.validator
 

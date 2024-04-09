@@ -1,6 +1,6 @@
 from p2p import P2P
 import pickle
-from queue import Queue
+from queue import Queue, Empty
 import json
 import threading
 from wallet import Wallet
@@ -9,25 +9,23 @@ import time
 
 class Node:
     # Class that represents the each node of the cluster    
-    def __init__(self, ip, port):
+    def __init__(self, ip, port, stop_event):
         self.ip = ip
         self.port = port
         self.wallet = Wallet()
         self.p2p = P2P(self.ip, self.port, self.wallet)
         if self.port != 40000:
-            time.sleep(2)
-        self.p2p.p2p_network_init()
+            time.sleep(5)
+        self.p2p.p2p_network_init(stop_event)
         self.wallet.set_peers(self.p2p.peers, self.p2p.nodes)
         self.wallet.set_blockchain(self.p2p.blockchain)
         self.p2p.set_wallet(self.wallet)
 
-        input_queue = file_parsing(self.p2p.id)
-
         # Start Blockchaining
-        self.blockchaining(input_queue)
+        self.blockchaining(stop_event)
 
-    def command_reading(self, input_queue: Queue):
-        while True:
+    def command_reading(self, input_queue: Queue, stop_event):
+        while not stop_event.is_set():
             try:
                 # Read command from the command line
                 command = input_queue.get_nowait()
@@ -37,7 +35,7 @@ class Node:
                         last_block_transactions, last_validator_id = self.wallet.view_block()
                         print("Last validated block's transactions:")
                         for transaction in last_block_transactions:
-                            print(transaction)
+                            print(transaction.payload())
                         print("With validator (by id): ", last_validator_id)
 
                     elif command == "balance":
@@ -79,7 +77,7 @@ class Node:
                             block = self.wallet.mint_block()
                             if block is not None:
                                 self.wallet.broadcast_block(block)
-            except:
+            except Empty:
                 print("Queue is empty")
                 print(len(self.wallet.transaction_pool.transactions))
                 while self.wallet.transaction_pool.validation_required():
@@ -89,18 +87,23 @@ class Node:
                             self.wallet.broadcast_block(block)
                             
                 time.sleep(10)
+                self.p2p.disconnect_sockets()
                 print(len(self.wallet.transaction_pool.transactions))
                 break
 
 
-    def blockchaining(self, input_queue):
+    def blockchaining(self, stop_event):
 
         if self.p2p.id == 'id0':
             self.wallet.initial_distribution()
+        # else:
+        #     while self.wallet.my_balance() == 0:
+        #         pass
 
         time.sleep(5)
 
+        input_queue = file_parsing(self.p2p.id)
+
         # Command Reading Thread
-        command_reading_thread = threading.Thread(target=self.command_reading, args=(input_queue,))
-        command_reading_thread.start()
-        command_reading_thread.join()
+        self.command_reading(input_queue, stop_event)
+        print("File read!")

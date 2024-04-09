@@ -29,30 +29,35 @@ class P2P:
     def set_wallet(self, wallet):
         self.wallet = wallet
 
-    def start_listening(self):
+    def start_listening(self, stop_event):
         self.listening_socket.listen(10)
         while True:
             peer_listening_socket, client_address = self.listening_socket.accept()
             data = peer_listening_socket.recv(1024).decode()
             peer_id = json.loads(data)
-            t= threading.Thread(target=self.handle_connection, args=(peer_listening_socket,))
+            t= threading.Thread(target=self.handle_connection, args=(peer_listening_socket, stop_event,))
             t.daemon = True
             t.start()
     
-    def handle_connection(self, peer_socket):
-        while True:
-            # Receive data from the client
-            data = peer_socket.recv(409600)
-            # Unpickle the received data
-            message = pickle.loads(data)
-            if message:
-                decoded_message = BlockChainUtils.decode(message)
-                if decoded_message.message_type == "TRANSACTION":
-                    self.wallet.handle_transaction(decoded_message.data)
-                elif decoded_message.message_type == "BLOCK":
-                    self.wallet.handle_block(decoded_message.data)
-                else:
-                    self.wallet.handle_blockchain(decoded_message.data)
+    def handle_connection(self, peer_socket, stop_event):
+        try:
+            while True:
+                # Receive data from the client
+                data = peer_socket.recv(409600)
+                # Unpickle the received data
+                message = pickle.loads(data)
+                if message:
+                    decoded_message = BlockChainUtils.decode(message)
+                    if decoded_message.message_type == "TRANSACTION":
+                        self.wallet.handle_transaction(decoded_message.data)
+                    elif decoded_message.message_type == "BLOCK":
+                        self.wallet.handle_block(decoded_message.data)
+                    else:
+                        self.wallet.handle_blockchain(decoded_message.data)
+        except EOFError:
+            # Shutdown and close the socket when done
+            peer_socket.shutdown(socket.SHUT_RDWR)
+            peer_socket.close()
 
 
     def connect_to_all_peers(self):
@@ -130,7 +135,7 @@ class P2P:
             socket.send(json.dumps(self.peers).encode())
 
 
-    def p2p_network_init(self):
+    def p2p_network_init(self, stop_event):
 
         # BOOTSTRAP NODE
         if (self.port == self.bootstrap_node[1]):
@@ -138,7 +143,7 @@ class P2P:
             self.peers = {self.id: {'ip': self.bootstrap_node[0], 'port': self.port, 'public_key': self.public_key, 'balance': N*10000, 'stake': 10}}
             self.blockchain = Blockchain(self.wallet.public_key)
             self.bootstrap_mode()
-            t = threading.Thread(target=self.start_listening, args=())
+            t = threading.Thread(target=self.start_listening, args=(stop_event,))
             t.daemon = True
             t.start()
             time.sleep(0.5)
@@ -148,9 +153,21 @@ class P2P:
         # NON-BOOTSTRAP NODES
         else:
             self.connect_to_bootstrap_node(self.bootstrap_node[0], self.bootstrap_node[1])
-            t = threading.Thread(target=self.start_listening, args=())
+            t = threading.Thread(target=self.start_listening, args=(stop_event,))
             t.daemon = True
             t.start()
             time.sleep(0.5)
             self.connect_to_all_peers()
             print(f"{self.id}: End of bootstrapping phase!")
+
+
+    def disconnect_sockets(self):
+        for s in self.nodes.values():
+            try:
+                # Step 1: Shutdown the socket
+                s.shutdown(socket.SHUT_RDWR)
+                # Step 2: Close the socket
+                s.close()
+            except Exception as e:
+                # Handle any exceptions gracefully
+                print(f"Error occurred while disconnecting socket: {e}")
