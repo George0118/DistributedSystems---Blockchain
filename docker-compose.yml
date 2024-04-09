@@ -2,6 +2,7 @@ version: "3"
 services:
   python_container_0:
     build: .
+    network_mode: "host"
     environment:
       - CONTAINER_NUMBER=0
       - PORT_NUMBER=40000
@@ -9,11 +10,10 @@ services:
       - .:/app
     stdin_open: true
     tty: true
-    ports:
-      - "40000:40000"
 
   python_container_1:
     build: .
+    network_mode: "host"
     environment:
       - CONTAINER_NUMBER=1
       - PORT_NUMBER=40001
@@ -21,13 +21,12 @@ services:
       - .:/app
     stdin_open: true
     tty: true
-    ports:
-      - "40001:40001"
     depends_on:
       - python_container_0
 
   python_container_2:
     build: .
+    network_mode: "host"
     environment:
       - CONTAINER_NUMBER=2
       - PORT_NUMBER=40002
@@ -35,14 +34,12 @@ services:
       - .:/app
     stdin_open: true
     tty: true
-    ports:
-      - "40002:40002"
     depends_on:
       - python_container_0
 
-    
   python_container_3:
     build: .
+    network_mode: "host"
     environment:
       - CONTAINER_NUMBER=3
       - PORT_NUMBER=40003
@@ -50,13 +47,12 @@ services:
       - .:/app
     stdin_open: true
     tty: true
-    ports:
-      - "40003:40003"
     depends_on:
       - python_container_0
 
   python_container_4:
     build: .
+    network_mode: "host"
     environment:
       - CONTAINER_NUMBER=4
       - PORT_NUMBER=40004
@@ -64,7 +60,5 @@ services:
       - .:/app
     stdin_open: true
     tty: true
-    ports:
-      - "40004:40004"
     depends_on:
       - python_container_0

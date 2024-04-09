@@ -272,8 +272,6 @@ class Wallet:
         block_validator = block.validator
         block_prev_hash = block.previous_hash
 
-        print(block_validator == validator_pk, block_prev_hash == prev_hash)
-
         if (
             block_validator == validator_pk
             and block_prev_hash == prev_hash

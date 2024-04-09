@@ -18,4 +18,4 @@ RUN pip install jsonpickle pycryptodome
 EXPOSE $PORT_NUMBER
 
 # Define the command to run the Python script
-CMD ["sh", "-c", "python main.py 0.0.0.0 $(($PORT_NUMBER))"]
+CMD ["sh", "-c", "python main.py 127.0.0.1 $(($PORT_NUMBER))"]

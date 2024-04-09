@@ -18,7 +18,7 @@ class P2P:
         self.public_key = wallet.public_key
         self.peers = None     # Dictionary of peers' id: {'ip': ip, 'port': port, 'public_key': public_key, 'balance': balance, 'stake': stake}
         self.nodes = {}       # Dictionary of nodes' id: sending_socket}
-        self.bootstrap_node = ("python_container_0", 40000)
+        self.bootstrap_node = ("127.0.0.1", 40000)
         self.cluster_size = N
         self.wallet = wallet
 
@@ -85,7 +85,7 @@ class P2P:
 
         # Send my info: ip, port and public key
         ip_port_pubkey = {
-            'ip': 'python_container_' + str(self.port - bootstrap_port),
+            'ip': self.ip,
             'port': self.port,
             'public_key': self.public_key
         }
