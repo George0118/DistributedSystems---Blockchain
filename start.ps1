@@ -1,5 +1,5 @@
 # Start Docker Compose services
-docker-compose up -d
+docker-compose up --build -d
 
 # Get a list of running containers
 $containers = docker ps --format "{{.Names}}"

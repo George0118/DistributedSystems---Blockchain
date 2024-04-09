@@ -98,7 +98,6 @@ class Wallet:
         Checks if transaction is valid and does not already exist - if valid it broadcasts it
         """
         with self.lock:
-            print("hi")
             if self.validate_transaction(transaction):
                 # If the signature is valid and the transaction is new, it is added to the pool
                 self.transaction_pool.add_transaction(transaction)
@@ -156,13 +155,14 @@ class Wallet:
         
     def broadcast_transaction(self, transaction: Transaction):
         """ Broadcasts Transaction """
-        message = Message("TRANSACTION", transaction)
-        message = BlockChainUtils.encode(message)
+        with self.lock:
+            message = Message("TRANSACTION", transaction)
+            message = BlockChainUtils.encode(message)
 
-        if message is not None:
-            message = pickle.dumps(message)
-            for socket in self.nodes.values():
-                socket.sendall(message)
+            if message is not None:
+                message = pickle.dumps(message)
+                for socket in self.nodes.values():
+                    socket.sendall(message)
     
     def execute_transaction(self, transaction:Transaction):
         """ Executes a Transaction saving its changes to the wallets"""
@@ -348,13 +348,14 @@ class Wallet:
 
     def broadcast_block(self, block:Block):
         """ Broadcasts Block """
-        message = Message("BLOCK", block)
-        message = BlockChainUtils.encode(message)
+        with self.lock:
+            message = Message("BLOCK", block)
+            message = BlockChainUtils.encode(message)
 
-        if message is not None:
-            message = pickle.dumps(message)
-            for socket in self.nodes.values():
-                socket.sendall(message)
+            if message is not None:
+                message = pickle.dumps(message)
+                for socket in self.nodes.values():
+                    socket.sendall(message)
 
     def broadcast_blockchain(self, blockchain:Blockchain):
         """ Broadcasts Block """

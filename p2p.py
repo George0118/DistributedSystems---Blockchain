@@ -42,7 +42,7 @@ class P2P:
     def handle_connection(self, peer_socket):
         while True:
             # Receive data from the client
-            data = peer_socket.recv(40960)
+            data = peer_socket.recv(409600)
             # Unpickle the received data
             message = pickle.loads(data)
             if message:

@@ -4,7 +4,7 @@ from queue import Queue
 import json
 import threading
 from wallet import Wallet
-from commands import process_command
+from commands import process_command, file_parsing
 import time
 
 class Node:
@@ -21,13 +21,16 @@ class Node:
         self.wallet.set_blockchain(self.p2p.blockchain)
         self.p2p.set_wallet(self.wallet)
 
-        # Start Blockchaining
-        self.blockchaining()
+        input_queue = file_parsing(self.p2p.id)
 
-    def command_reading(self):
+        # Start Blockchaining
+        self.blockchaining(input_queue)
+
+    def command_reading(self, input_queue: Queue):
         while True:
             # Read command from the command line
-            command = input(f"> {self.p2p.id.upper()}: ")
+            command = input_queue.get_nowait()
+            print("Acquired command:", command)
             if len(command.strip()) != 0:
                 if command == "view":
                     last_block_transactions, last_validator_id = self.wallet.view_block()
@@ -75,7 +78,8 @@ class Node:
                         block = self.wallet.mint_block()
                         if block is not None:
                             self.wallet.broadcast_block(block)
-
+    
+        print("Queue is empty")
         print(len(self.wallet.transaction_pool.transactions))
         while self.wallet.transaction_pool.validation_required():
             if not self.wallet.await_block:
@@ -85,12 +89,15 @@ class Node:
                     
         print(len(self.wallet.transaction_pool.transactions))
 
-    def blockchaining(self):
+
+    def blockchaining(self, input_queue):
 
         if self.p2p.id == 'id0':
             self.wallet.initial_distribution()
 
+        time.sleep(5)
+
         # Command Reading Thread
-        command_reading_thread = threading.Thread(target=self.command_reading, args=())
+        command_reading_thread = threading.Thread(target=self.command_reading, args=(input_queue,))
         command_reading_thread.start()
         command_reading_thread.join()

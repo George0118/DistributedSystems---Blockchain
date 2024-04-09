@@ -39,3 +39,32 @@ services:
       - "40002:40002"
     depends_on:
       - python_container_0
+
+    
+  python_container_3:
+    build: .
+    environment:
+      - CONTAINER_NUMBER=3
+      - PORT_NUMBER=40003
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+    ports:
+      - "40003:40003"
+    depends_on:
+      - python_container_0
+
+  python_container_4:
+    build: .
+    environment:
+      - CONTAINER_NUMBER=4
+      - PORT_NUMBER=40004
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+    ports:
+      - "40004:40004"
+    depends_on:
+      - python_container_0

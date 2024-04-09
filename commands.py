@@ -1,4 +1,6 @@
 import json        
+from queue import Queue
+from config import N
 
 def process_command(string):
     splits = string.split(" ", 2)
@@ -24,3 +26,16 @@ def process_command(string):
         return None
 
     return json.dumps(command_info)
+
+
+def file_parsing(id):
+    file_name = "trans" + id[2] + ".txt"
+    folder_name = "input_" + str(N)
+    file_path = folder_name + "/" + file_name
+    queue = Queue()
+
+    with open(file_path, 'r') as file:
+        for line in file:
+            command = "m " + line.strip()
+            queue.put(command)
+    return queue
