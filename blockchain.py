@@ -18,7 +18,7 @@ class Blockchain:
         genesis_transaction = Transaction(
             sender_address="0",
             receiver_address=bootstrap_public_key,
-            amount=1000 * N,
+            amount=10000 * N,
             nonce=0,
             message="",
             type="Exchange",
@@ -29,6 +29,7 @@ class Blockchain:
         """Adds a block to the blockchain and executes the transactions in the block"""
         total_fees = block.sum_fees()
         self.chain.append(block)
+        print(len(self.chain))
         return total_fees
     
     def get_prevhash(self):

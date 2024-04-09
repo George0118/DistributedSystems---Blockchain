@@ -42,7 +42,7 @@ class P2P:
     def handle_connection(self, peer_socket, peer_id, stop_event):
         while not stop_event.is_set():
             # Receive data from the client
-            data = peer_socket.recv(40960)
+            data = peer_socket.recv(409600)
             # Unpickle the received data
             message = pickle.loads(data)
             if message:
@@ -135,7 +135,7 @@ class P2P:
         # BOOTSTRAP NODE
         if ((self.ip, self.port) == self.bootstrap_node):
             self.id = "id0"
-            self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.public_key, 'balance': N*1000, 'stake': 10}}
+            self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.public_key, 'balance': N*10000, 'stake': 10}}
             self.blockchain = Blockchain(self.wallet.public_key)
             self.bootstrap_mode()
             t = threading.Thread(target=self.start_listening, args=(stop_event,))
