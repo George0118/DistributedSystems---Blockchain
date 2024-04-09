@@ -1,4 +1,4 @@
-import json
+import json        
 
 def process_command(string):
     splits = string.split(" ", 2)
@@ -24,6 +24,3 @@ def process_command(string):
         return None
 
     return json.dumps(command_info)
-
-        
-        
