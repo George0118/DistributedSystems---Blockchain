@@ -17,7 +17,6 @@ class Node:
         self.p2p.p2p_network_init(stop_event)
         self.wallet.set_peers(self.p2p.peers, self.p2p.nodes)
         self.wallet.set_blockchain(self.p2p.blockchain)
-        # self.wallet.set_blockchain(self.p2p.blockchain)
         self.p2p.set_wallet(self.wallet)
 
         input_queue = file_parsing(self.p2p.id)
@@ -62,21 +61,30 @@ class Node:
                             receiver_address = 0
 
                         transaction_to_send = self.wallet.create_transaction(
-                                                            receiver_address,
-                                                            arguments["type"], 
-                                                            arguments.get("amount", 0),  # Use default value if "amount" key is not present
-                                                            arguments.get("message", "")  # Use default value if "data" key is not present
-                                                        )
+                                                        receiver_address,
+                                                        arguments["type"], 
+                                                        arguments.get("amount", 0),  # Use default value if "amount" key is not present
+                                                        arguments.get("message", "")  # Use default value if "data" key is not present
+                                                    )
+                    
                         if self.wallet.check_transaction(transaction_to_send) is not None:
                             self.wallet.broadcast_transaction(transaction_to_send)
 
-                        if self.wallet.transaction_pool.validation_required():
+                        if self.wallet.transaction_pool.validation_required() and not self.wallet.await_block:
                             block = self.wallet.mint_block()
                             if block is not None:
                                 self.wallet.broadcast_block(block)
             except Exception:
                 print("Queue is empty")
+                print(len(self.wallet.transaction_pool.transactions))
+                while self.wallet.transaction_pool.validation_required():
+                    if not self.wallet.await_block:
+                        block = self.wallet.mint_block()
+                        if block is not None:
+                            self.wallet.broadcast_block(block)
+                            
                 time.sleep(10)
+                print(len(self.wallet.transaction_pool.transactions))
                 break
 
     def blockchaining(self, input_queue, stop_event):

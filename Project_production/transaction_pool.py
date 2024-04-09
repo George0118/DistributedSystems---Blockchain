@@ -8,9 +8,13 @@ class TransactionPool:
     def __init__(self):
         self.transactions = []  # A list of transactions
 
+    def set_wallet(self, wallet):
+        self.wallet = wallet
+
     def add_transaction(self, transaction):
         """Adds transaction to list"""
-        self.transactions.append(transaction)
+        with self.wallet.lock:
+            self.transactions.append(transaction)
 
     def transaction_exists(self, transaction):
         """Checks if a transaction exists in the list"""
@@ -19,19 +23,19 @@ class TransactionPool:
                 return True
         return False
 
-    def remove_from_pool(self, transactions, Ivalidator, wallet = None):
+    def remove_from_pool(self, transactions, wallet = None):
         """Removes transactions from the pool, i.e., if they have been added to a block"""
-        if Ivalidator == True:
-            self.transactions = []
-        else:
+        print("Before:", len(self.transactions))
+        with self.wallet.lock:
             rest_transactions = [t1 for t1 in self.transactions if not any(t1.equals(t2) for t2 in transactions)]
             self.transactions = []
-            for transaction in rest_transactions:
-                wallet.handle_transaction(transaction)
+        for transaction in rest_transactions:
+            if wallet is not None:
+                wallet.handle_transaction(transaction, True)
+        print("After:", len(self.transactions))
 
     def validation_required(self):
         """Decides if it is time to create a new block"""
-        return len(self.transactions) >= CAPACITY
         return len(self.transactions) >= CAPACITY
     
     def get_length(self):
