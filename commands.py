@@ -1,5 +1,17 @@
 import json
 
+def read_input(queue, stop_event):
+    while not stop_event.is_set():
+        user_input = input("Enter command: ").strip()
+        if user_input.lower() == "exit":
+            stop_event.set()  # Set the stop event to signal threads to exit
+            break
+        elif user_input:
+            try:
+                queue.put(user_input.strip())  # Put the command into the appropriate thread's queue
+            except ValueError:
+                print("Invalid input format. Please enter in the format 'idN: command'.")
+
 def process_command(string):
     splits = string.split(" ", 2)
     command_info = {}
@@ -23,7 +35,4 @@ def process_command(string):
         print(f"\nUnknown command {splits[0]}")
         return None
 
-    return json.dumps(command_info)
-
-        
-        
+    return json.dumps(command_info)        

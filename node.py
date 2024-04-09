@@ -4,12 +4,12 @@ from queue import Queue
 import json
 import threading
 from wallet import Wallet
-from commands import process_command
+from commands import read_input, process_command
 import time
 
 class Node:
     # Class that represents the each node of the cluster    
-    def __init__(self, ip, port, input_queue, stop_event):
+    def __init__(self, ip, port, stop_event):
         self.ip = ip
         self.port = port
         self.wallet = Wallet()
@@ -20,7 +20,7 @@ class Node:
         self.p2p.set_wallet(self.wallet)
 
         # Start Blockchaining
-        self.blockchaining(input_queue, stop_event)
+        self.blockchaining(stop_event)
 
     def command_reading(self, input_queue: Queue, stop_event):
         while not stop_event.is_set():
@@ -82,12 +82,22 @@ class Node:
                     
         print(len(self.wallet.transaction_pool.transactions))
 
-    def blockchaining(self, input_queue, stop_event):
+    def blockchaining(self, stop_event):
 
         if self.p2p.id == 'id0':
             self.wallet.initial_distribution()
 
+            # Create queues for each thread to handle its input
+        input_queue = Queue()
+
+        # Start a separate thread to read input and dispatch to appropriate threads
+        input_thread = threading.Thread(target=read_input, args=(input_queue, stop_event))
+        input_thread.daemon = True
+        input_thread.start()
+
+        self.command_reading(input_queue, stop_event)
+
         # Command Reading Thread
-        command_reading_thread = threading.Thread(target=self.command_reading, args=(input_queue, stop_event,))
-        command_reading_thread.start()
-        command_reading_thread.join()
+        # command_reading_thread = threading.Thread(target=self.command_reading, args=(input_queue, stop_event,))
+        # command_reading_thread.start()
+        # command_reading_thread.join()

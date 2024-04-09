@@ -35,7 +35,7 @@ if __name__ == '__main__':
     input_thread.start()
 
     # Start the bootstrap node first
-    bootstrap_thread = threading.Thread(target=main, args=(ip, base_port, queues[0], stop_event))
+    bootstrap_thread = threading.Thread(target=main, args=(ip, base_port, stop_event, queues[0]))
     bootstrap_thread.start()
 
     # Give some time for the bootstrap node to start
@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     threads = [bootstrap_thread]
     for i in range(1, N):
-        t = threading.Thread(target=main, args=(ip, base_port+i, queues[i], stop_event))
+        t = threading.Thread(target=main, args=(ip, base_port+i, stop_event, queues[i]))
         threads.append(t)
         t.start()
 
