@@ -1,6 +1,6 @@
 from p2p import P2P
 import pickle
-from queue import Queue
+from queue import Queue, Empty
 import json
 import threading
 from wallet import Wallet
@@ -19,10 +19,8 @@ class Node:
         self.wallet.set_blockchain(self.p2p.blockchain)
         self.p2p.set_wallet(self.wallet)
 
-        input_queue = file_parsing(self.p2p.id)
-
         # Start Blockchaining
-        self.blockchaining(input_queue, stop_event)
+        self.blockchaining(stop_event)
 
     def command_reading(self, input_queue: Queue, stop_event):
         print(f"{self.p2p.id}: Received commands from the text file.")
@@ -36,7 +34,7 @@ class Node:
                         last_block_transactions, last_validator_id = self.wallet.view_block()
                         print("Last validated block's transactions:")
                         for transaction in last_block_transactions:
-                            print(transaction)
+                            print(transaction.payload())
                         print("With validator (by id): ", last_validator_id)
 
                     elif command == "balance":
@@ -74,7 +72,7 @@ class Node:
                             block = self.wallet.mint_block()
                             if block is not None:
                                 self.wallet.broadcast_block(block)
-            except Exception:
+            except Empty:
                 print("Queue is empty")
                 print(len(self.wallet.transaction_pool.transactions))
                 while self.wallet.transaction_pool.validation_required():
@@ -84,19 +82,20 @@ class Node:
                             self.wallet.broadcast_block(block)
                             
                 time.sleep(10)
+                self.p2p.disconnect_sockets()
                 print(len(self.wallet.transaction_pool.transactions))
                 break
 
-    def blockchaining(self, input_queue, stop_event):
+    def blockchaining(self, stop_event):
 
         if self.p2p.id == 'id0':
             self.wallet.initial_distribution()
+        else:
+            while self.wallet.my_balance() == 0:
+                pass
 
-        time.sleep(5)
-        print(self.wallet.my_balance())
+        input_queue = file_parsing(self.p2p.id)
 
         # Command Reading Thread
-        command_reading_thread = threading.Thread(target=self.command_reading, args=(input_queue, stop_event,))
-        command_reading_thread.start()
-        command_reading_thread.join()
+        self.command_reading(input_queue, stop_event)
         print("File read!")
