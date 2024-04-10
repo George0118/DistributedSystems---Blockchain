@@ -43,6 +43,7 @@ class Wallet:
             if dict["public_key"] == self.public_key:
                 self.id = id
                 break
+        self.temp_stake = self.peers[self.id]["stake"]
 
     def set_blockchain(self, blockchain:Blockchain):
         self.blockchain = blockchain
@@ -152,40 +153,45 @@ class Wallet:
                     return True
         
         return False
+
         
     def broadcast_transaction(self, transaction: Transaction):
         """ Broadcasts Transaction """
-        with self.lock:
-            message = Message("TRANSACTION", transaction)
-            message = BlockChainUtils.encode(message)
+        message = Message("TRANSACTION", transaction)
+        message = BlockChainUtils.encode(message)
 
-            if message is not None:
-                message = pickle.dumps(message)
-                for socket in self.nodes.values():
-                    socket.sendall(message)
+        if message is not None:
+            message = pickle.dumps(message)
+            for socket in self.nodes.values():
+                socket.sendall(message)
     
     def execute_transaction(self, transaction:Transaction):
         """ Executes a Transaction saving its changes to the wallets"""
-        # If the transaction is Exchange or Initialization then remove from sender balance and add to receiver
-        if transaction.type == "Exchange" or transaction.type == "Initialization":    
-            receiver_id = None
-            sender_id = None
-            for id, dict_id in self.peers.items():
-                if dict_id["public_key"] == transaction.receiver_address:
-                    receiver_id = id
-                if dict_id["public_key"] == transaction.sender_address:
-                    sender_id = id
-            
-            self.peers[sender_id]["balance"] -= (transaction.amount + transaction.fee)
-            self.peers[receiver_id]["balance"] += transaction.amount
+        with self.lock:
+            # If the transaction is Exchange or Initialization then remove from sender balance and add to receiver
+            if transaction.type == "Exchange" or transaction.type == "Initialization":    
+                receiver_id = None
+                sender_id = None
+                for id, dict_id in self.peers.items():
+                    if dict_id["public_key"] == transaction.receiver_address:
+                        receiver_id = id
+                    if dict_id["public_key"] == transaction.sender_address:
+                        sender_id = id
+                
+                self.peers[sender_id]["balance"] -= (transaction.amount + transaction.fee)
+                self.peers[receiver_id]["balance"] += transaction.amount
 
-        elif transaction.type == "Stake":       # If the transaction is Stake then remove the money from the balance
-            sender_id = None
-            for id, dict_id in self.peers.items():
-                if dict_id["public_key"] == transaction.sender_address:
-                    sender_id = id
-            
-            self.peers[sender_id]["balance"] -= (transaction.amount - self.peers[sender_id]["stake"])
+            elif transaction.type == "Stake":       # If the transaction is Stake then remove the money from the balance
+                sender_id = None
+                for id, dict_id in self.peers.items():
+                    if dict_id["public_key"] == transaction.sender_address:
+                        sender_id = id
+                
+                previous_stake = self.peers[sender_id]["stake"]
+                
+                self.peers[sender_id]["stake"] = transaction.amount
+
+                self.peers[sender_id]["balance"] -= (transaction.amount - previous_stake)
 
     def temp_execute_transaction(self, transaction:Transaction):
         """ Executes a Transaction saving its changes to the wallets"""
@@ -208,8 +214,11 @@ class Wallet:
                 for id, dict_id in self.peers.items():
                     if dict_id["public_key"] == transaction.sender_address:
                         sender_id = id
-                
-                self.temp_balance[sender_id] -= (transaction.amount - self.peers[sender_id]["stake"])
+
+                previous_stake = self.temp_stake
+                self.temp_stake = transaction.amount
+                self.temp_balance[sender_id] += previous_stake
+                self.temp_balance[sender_id] -= transaction.amount
     
     def initial_distribution(self):
         """ Executes initialization transactions to all peers only from 0 so everyone has 1000 balance """
@@ -295,6 +304,8 @@ class Wallet:
                 for transaction in block.transactions:
                     self.execute_transaction(transaction)
 
+                self.fix_temp_balances()
+
                 self.transaction_pool.remove_from_pool(
                     block.transactions
                 )  # Clears transaction pool by removing all transactions added to block
@@ -323,37 +334,54 @@ class Wallet:
             for id, data in self.peers.items():
                 self.temp_balance[id] = data["balance"]
     
-    def stakes_and_messages(self, block:Block):
-        for transaction in block.transactions:
-            if transaction.type == "Stake":
-                change_id = None
-                for id, dict_id in self.peers.items():
-                    if dict_id["public_key"] == transaction.sender_address:
-                        change_id = id
-                self.peers[change_id]["stake"] = transaction.amount
-            if transaction.type == "Exchange" and transaction.message != "" and self.public_key == transaction.receiver_address:
-                sender_id = None
-                for id, dict_id in self.peers.items():
-                    if dict_id["public_key"] == transaction.sender_address:
-                        sender_id = id
-                print(f"{self.id}: User with ID", sender_id, "messaged you:", transaction.message)
+    def stakes_and_messages(self, block: Block):
+        with self.lock:
+            latest_stakes = {}  # Dictionary to store the latest stake transaction for each node
+            
+            for transaction in block.transactions:
+                if transaction.type == "Stake":
+                    # Get the ID of the node making the stake transaction
+                    stake_node_id = None
+                    for id, dict_id in self.peers.items():
+                        if dict_id["public_key"] == transaction.sender_address:
+                            stake_node_id = id
+                            break
+                    # Update the latest stake transaction for the node
+                    if stake_node_id is not None:  # Make sure node ID is found
+                            latest_stakes[stake_node_id] = transaction.amount
 
-        # And also update the POS stakes
-        stakes_dict = {}
-        for id, dict in self.peers.items():
-            stakes_dict[id] = dict["stake"]
-        self.pos.set_stakes(stakes_dict)
+                if transaction.type == "Exchange" and transaction.message != "" and self.public_key == transaction.receiver_address:
+                    sender_id = None
+                    for id, dict_id in self.peers.items():
+                        if dict_id["public_key"] == transaction.sender_address:
+                            sender_id = id
+                    print(f"{self.id}: User with ID", sender_id, "messaged you:", transaction.message)
+
+            # Update balances after processing all transactions
+            for id, data in self.peers.items():
+                # Add the latest stake amount for nodes that have a stake transaction in the block
+                if id in latest_stakes:
+                    self.temp_balance[id] += data["stake"]
+                    self.temp_balance[id] -= latest_stakes[id]
+
+                    # Update the stake amount in the peers dictionary
+                    self.peers[id]["stake"] = latest_stakes[id]
+
+            # Update the POS stakes after processing all transactions
+            stakes_dict = {}
+            for id, data in self.peers.items():
+                stakes_dict[id] = data["stake"]
+            self.pos.set_stakes(stakes_dict)
 
     def broadcast_block(self, block:Block):
         """ Broadcasts Block """
-        with self.lock:
-            message = Message("BLOCK", block)
-            message = BlockChainUtils.encode(message)
+        message = Message("BLOCK", block)
+        message = BlockChainUtils.encode(message)
 
-            if message is not None:
-                message = pickle.dumps(message)
-                for socket in self.nodes.values():
-                    socket.sendall(message)
+        if message is not None:
+            message = pickle.dumps(message)
+            for socket in self.nodes.values():
+                socket.sendall(message)
 
     def broadcast_blockchain(self, blockchain:Blockchain):
         """ Broadcasts Block """
@@ -393,11 +421,28 @@ class Wallet:
         last_valid_block = self.blockchain.chain[-1]
         last_block_transactions = last_valid_block.transactions
         last_validator_by_key = last_valid_block.validator
+        print("Last validated block's transactions:")
+        for transaction in last_block_transactions:
+            print(transaction.payload())
 
         for last_validator_id, data in self.peers.items():
             if data["public_key"] == last_validator_by_key:
-                return last_validator_id, last_block_transactions
-        return None
-    
+                print("With validator (by id): ", last_validator_id)                        
+                        
     def my_balance(self):
-        return self.temp_balance[self.id]
+        return self.temp_balance[self.id], self.peers[self.id]["stake"]
+    
+    def view_blockchain(self):
+        """
+        Returns the blockchain
+        """
+        for block in self.blockchain.chain:
+            print("Block index: ", block.index)
+            print("Block validator: ", block.validator)
+            print("Block previous hash: ", block.previous_hash)
+            print("Block hash: ", block.hash)
+            print("Block transactions: ")
+            for transaction in block.transactions:
+                print(transaction.payload())
+            print("\n")
+        
