@@ -86,14 +86,15 @@ class Wallet:
         """
         Checks if transaction is valid and does not already exist - if valid it broadcasts it
         """
-        if self.validate_transaction(transaction):
-            # If the signature is valid and the transaction is new, it is added to the pool
-            self.transaction_pool.add_transaction(transaction)
-            self.temp_execute_transaction(transaction)
-            return transaction
-        else:
-            print(f"Invalid transaction")
-            return None
+        with self.lock:
+            if self.validate_transaction(transaction):
+                # If the signature is valid and the transaction is new, it is added to the pool
+                self.transaction_pool.add_transaction(transaction)
+                self.temp_execute_transaction(transaction)
+                return transaction
+            else:
+                print(f"Invalid transaction")
+                return None
         
     def handle_transaction(self, transaction:Transaction, flag = False):
         """
@@ -246,26 +247,29 @@ class Wallet:
         """
         if self.validate_block(block):
             # If block is valid then execute any transactions that are in the block and not in the pool
-            for transaction in block.transactions:
-                self.execute_transaction(transaction)
+            with self.lock:
+                for transaction in block.transactions:
+                    self.execute_transaction(transaction)
 
-            self.fix_temp_balances()
+                self.fix_temp_balances()
 
-            self.transaction_pool.remove_from_pool(
-                block.transactions
-            )
+                self.transaction_pool.remove_from_pool(
+                    block.transactions
+                )
 
-            # And add the block to the blockchain
-            self.stakes_and_messages(block)
-            fees = self.blockchain.add_block(block)
-            validator_id = None
-            for id, dict in self.peers.items():
-                if dict["public_key"] == block.validator:
-                    validator_id = id
-                    break
-            self.peers[validator_id]["balance"] += fees
+                # And add the block to the blockchain
+                self.stakes_and_messages(block)
+                fees = self.blockchain.add_block(block)
+                validator_id = None
+                for id, dict in self.peers.items():
+                    if dict["public_key"] == block.validator:
+                        validator_id = id
+                        break
 
-            # self.block_times.append(time.time() - self.starting_time)
+                self.peers[validator_id]["balance"] += fees
+                self.temp_balance[validator_id] += fees
+
+                # self.block_times.append(time.time() - self.starting_time)
 
         else:
             print(f"Invalid block")   
@@ -324,6 +328,7 @@ class Wallet:
                         validator_id = id
                         break
                 self.peers[validator_id]["balance"] += fees
+                self.temp_balance[validator_id] += fees
                 # self.block_times.append(time.time() - self.starting_time)
                 
                 return block
@@ -355,7 +360,7 @@ class Wallet:
                             break
                     # Update the latest stake transaction for the node
                     if stake_node_id is not None:  # Make sure node ID is found
-                            latest_stakes[stake_node_id] = transaction.amount
+                        latest_stakes[stake_node_id] = transaction.amount
 
                 if transaction.type == "Exchange" and transaction.message != "" and self.public_key == transaction.receiver_address:
                     sender_id = None
