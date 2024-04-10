@@ -390,10 +390,11 @@ class Wallet:
         message = Message("BLOCK", block)
         message = BlockChainUtils.encode(message)
 
-        if message is not None:
-            message = pickle.dumps(message)
-            for socket in self.nodes.values():
-                socket.sendall(message)
+        with self.lock:
+            if message is not None:
+                message = pickle.dumps(message)
+                for socket in self.nodes.values():
+                    socket.sendall(message)
 
     def broadcast_blockchain(self, blockchain:Blockchain):
         """ Broadcasts Block """

@@ -71,14 +71,14 @@ class Node:
                                                         arguments.get("amount", 0),  # Use default value if "amount" key is not present
                                                         arguments.get("message", "")  # Use default value if "data" key is not present
                                                     )
-                    
-                        if self.wallet.check_transaction(transaction_to_send) is not None:
-                            self.wallet.broadcast_transaction(transaction_to_send)
+                        with self.wallet.lock:
+                            if self.wallet.check_transaction(transaction_to_send) is not None:
+                                self.wallet.broadcast_transaction(transaction_to_send)
 
-                        if self.wallet.transaction_pool.validation_required() and self.wallet.await_block <= 0:
-                            block = self.wallet.mint_block()
-                            if block is not None:
-                                self.wallet.broadcast_block(block)
+                            if self.wallet.transaction_pool.validation_required() and self.wallet.await_block <= 0:
+                                block = self.wallet.mint_block()
+                                if block is not None:
+                                    self.wallet.broadcast_block(block)
             except Empty:
                 print("Queue is empty")
                 print(len(self.wallet.transaction_pool.transactions))
