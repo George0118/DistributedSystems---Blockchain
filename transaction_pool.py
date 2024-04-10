@@ -1,5 +1,5 @@
 """For creating and managing a list of transactions"""
-from config import CAPACITY
+from running_script import CAPACITY
 
 
 class TransactionPool:

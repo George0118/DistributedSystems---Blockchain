@@ -1,3 +1,4 @@
+from running_script import N, CAPACITY
 from Crypto.PublicKey import RSA    # pycryptodome
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
@@ -10,7 +11,6 @@ from message import Message
 import json
 from utils import BlockChainUtils
 from proof_of_stake import ProofOfStake
-from config import N, CAPACITY
 import threading
 
 class Wallet:
@@ -33,8 +33,6 @@ class Wallet:
             stakes_dict[id] = dict["stake"]
 
         self.fix_temp_balances()
-
-        print(stakes_dict)
 
         self.pos.set_stakes(stakes_dict)
 
@@ -157,13 +155,14 @@ class Wallet:
         
     def broadcast_transaction(self, transaction: Transaction):
         """ Broadcasts Transaction """
-        message = Message("TRANSACTION", transaction)
-        message = BlockChainUtils.encode(message)
+        with self.lock:
+            message = Message("TRANSACTION", transaction)
+            message = BlockChainUtils.encode(message)
 
-        if message is not None:
-            message = pickle.dumps(message)
-            for socket in self.nodes.values():
-                socket.sendall(message)
+            if message is not None:
+                message = pickle.dumps(message)
+                for socket in self.nodes.values():
+                    socket.sendall(message)
     
     def execute_transaction(self, transaction:Transaction):
         """ Executes a Transaction saving its changes to the wallets"""

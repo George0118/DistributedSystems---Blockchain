@@ -1,8 +1,8 @@
 """For creating and managing blocks - a container that holds data (including transactions)"""
 
+from running_script import CAPACITY
 import time
 from utils import BlockChainUtils
-from config import CAPACITY
 
 
 class Block:

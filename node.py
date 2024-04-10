@@ -85,17 +85,13 @@ class Node:
         if self.p2p.id == 'id0':
             self.wallet.initial_distribution()
 
-            # Create queues for each thread to handle its input
+        # Create queues for each thread to handle its input
         input_queue = Queue()
 
         # Start a separate thread to read input and dispatch to appropriate threads
-        input_thread = threading.Thread(target=read_input, args=(input_queue, stop_event))
+        input_thread = threading.Thread(target=read_input, args=(input_queue, stop_event, self.p2p.id))
         input_thread.daemon = True
         input_thread.start()
 
         self.command_reading(input_queue, stop_event)
 
-        # Command Reading Thread
-        # command_reading_thread = threading.Thread(target=self.command_reading, args=(input_queue, stop_event,))
-        # command_reading_thread.start()
-        # command_reading_thread.join()
