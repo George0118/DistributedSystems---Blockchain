@@ -22,7 +22,7 @@ class Wallet:
         self.transaction_pool = TransactionPool()
         self.transaction_pool.set_wallet(self)
         self.pos = ProofOfStake()
-        self.await_block = False
+        self.await_block = 0
         self.lock = threading.RLock()
         self.block_times = []
         self.counter = 0
@@ -105,7 +105,7 @@ class Wallet:
                 self.transaction_pool.add_transaction(transaction)
                 self.temp_execute_transaction(transaction)
 
-                if self.transaction_pool.validation_required() and not self.await_block and not flag:
+                if self.transaction_pool.validation_required() and self.await_block <= 0 and not flag:
                         block = self.mint_block()
                         if block is not None:
                             self.broadcast_block(block)
@@ -270,7 +270,7 @@ class Wallet:
         else:
             print(f"Invalid block")   
 
-        self.await_block = False
+        self.await_block -= 1
     
     def validate_block(self, block:Block):
         """
@@ -329,7 +329,7 @@ class Wallet:
                 return block
             else:
                 print(f"I am not the validator")
-                self.await_block = True
+                self.await_block += 1
                 return None
 
     def fix_balances(self):

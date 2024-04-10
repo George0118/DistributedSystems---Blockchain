@@ -75,7 +75,7 @@ class Node:
                         if self.wallet.check_transaction(transaction_to_send) is not None:
                             self.wallet.broadcast_transaction(transaction_to_send)
 
-                        if self.wallet.transaction_pool.validation_required() and not self.wallet.await_block:
+                        if self.wallet.transaction_pool.validation_required() and self.wallet.await_block <= 0:
                             block = self.wallet.mint_block()
                             if block is not None:
                                 self.wallet.broadcast_block(block)
@@ -83,7 +83,7 @@ class Node:
                 print("Queue is empty")
                 print(len(self.wallet.transaction_pool.transactions))
                 while self.wallet.transaction_pool.validation_required():
-                    if not self.wallet.await_block:
+                    if self.wallet.await_block <= 0:
                         block = self.wallet.mint_block()
                         if block is not None:
                             self.wallet.broadcast_block(block)
