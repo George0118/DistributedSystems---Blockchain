@@ -34,8 +34,6 @@ class Wallet:
 
         self.fix_temp_balances()
 
-        print(stakes_dict)
-
         self.pos.set_stakes(stakes_dict)
 
         self.id = None
@@ -91,7 +89,7 @@ class Wallet:
             self.temp_execute_transaction(transaction)
             return transaction
         else:
-            print(f"{self.id}: Invalid transaction")
+            print(f"Invalid transaction")
             return None
         
     def handle_transaction(self, transaction:Transaction, flag = False):
@@ -109,7 +107,7 @@ class Wallet:
                         if block is not None:
                             self.broadcast_block(block)
             else:
-                print(f"{self.id}: Invalid transaction") 
+                print(f"Invalid transaction") 
 
     def validate_transaction(self, transaction:Transaction):
         """
@@ -265,7 +263,7 @@ class Wallet:
             self.peers[validator_id]["balance"] += fees
 
         else:
-            print(f"{self.id}: Invalid block")   
+            print(f"Invalid block")   
 
         self.await_block = False
     
@@ -299,7 +297,7 @@ class Wallet:
             validator_id = self.pos.validator(prev_hash)
             validator_pk = self.peers[validator_id]["public_key"]
             if validator_pk == self.public_key:
-                print(f"{self.id}: I am the validator")
+                print(f"I am the validator")
                 index = self.blockchain.next_index()
                 block = Block(self.transaction_pool.transactions[:CAPACITY], prev_hash, validator_pk, index)
                 for transaction in block.transactions:
@@ -322,7 +320,7 @@ class Wallet:
                 
                 return block
             else:
-                print(f"{self.id}: I am not the validator")
+                print(f"I am not the validator")
                 self.await_block = True
                 return None
 
@@ -356,7 +354,7 @@ class Wallet:
                     for id, dict_id in self.peers.items():
                         if dict_id["public_key"] == transaction.sender_address:
                             sender_id = id
-                    print(f"{self.id}: User with ID", sender_id, "messaged you:", transaction.message)
+                    print(f"User with ID", sender_id, "messaged you:", transaction.message)
 
             # Update balances after processing all transactions
             for id, data in self.peers.items():
@@ -401,7 +399,7 @@ class Wallet:
         if self.validate_blockchain(blockchain):
             self.blockchain = blockchain
         else:
-            print(f"{self.id}: Invalid blockchain")
+            print(f"Invalid blockchain")
 
     def validate_blockchain(self, blockchain:Blockchain):
         """

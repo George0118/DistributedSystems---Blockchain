@@ -65,17 +65,17 @@ class P2P:
             if peer_id != self.id:
                 peer_ip = peer_info['ip']
                 peer_port = peer_info['port']
-                print(f"{self.id}: Attempting to connect to peer {peer_id} at {peer_ip}:{peer_port}...")
+                print(f"Attempting to connect to peer {peer_id} at {peer_ip}:{peer_port}...")
                 try:
                     peer_send_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     peer_send_socket.connect((peer_ip, peer_port))
                     peer_send_socket.send(json.dumps(self.id).encode())
                     self.nodes[peer_id] = peer_send_socket
-                    print(f"{self.id}: Successfully connected to peer {peer_id}.")
+                    print(f"Successfully connected to peer {peer_id}.")
                 except ConnectionRefusedError:
-                    print(f"{self.id}: Connection to peer {peer_id} at {peer_ip}:{peer_port} refused.")
+                    print(f"Connection to peer {peer_id} at {peer_ip}:{peer_port} refused.")
                 except Exception as e:
-                    print(f"{self.id}: Error connecting to peer {peer_id}: {e}")
+                    print(f"Error connecting to peer {peer_id}: {e}")
 
 
     def connect_to_bootstrap_node(self, bootstrap_ip, bootstrap_port):
@@ -148,7 +148,10 @@ class P2P:
             t.start()
             time.sleep(0.5)
             self.connect_to_all_peers()
-            print(f"{self.id}: End of bootstrapping phase!")
+            print(f"End of bootstrapping phase!")
+            print()
+            print("-----------------------------------------------------")
+            print()
         
         # NON-BOOTSTRAP NODES
         else:
@@ -158,7 +161,10 @@ class P2P:
             t.start()
             time.sleep(0.5)
             self.connect_to_all_peers()
-            print(f"{self.id}: End of bootstrapping phase!")
+            print(f"End of bootstrapping phase!")
+            print()
+            print("-----------------------------------------------------")
+            print()
 
 
     def disconnect_sockets(self):

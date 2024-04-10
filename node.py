@@ -23,7 +23,7 @@ class Node:
         self.blockchaining(stop_event)
 
     def command_reading(self, input_queue: Queue, stop_event):
-        print(f"{self.p2p.id}: Received commands from the text file.")
+        print(f"Received commands from the text file.")
         while not stop_event.is_set():
             # Read command from the command line
             try:
@@ -93,6 +93,8 @@ class Node:
         else:
             while self.wallet.my_balance() == 0:
                 pass
+
+        time.sleep(5)
 
         input_queue = file_parsing(self.p2p.id)
 
