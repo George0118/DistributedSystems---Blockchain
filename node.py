@@ -27,9 +27,26 @@ class Node:
                 command = input_queue.get_nowait()
                 if len(command.strip()) != 0:
                     if command == "view":
-                        self.wallet.view_block()                        
+                        last_valid_block = self.wallet.blockchain.chain[-1]
+                        last_block_transactions = last_valid_block.transactions
+                        last_validator_by_key = last_valid_block.validator
+                        print("Last validated block's transactions:")
+                        for transaction in last_block_transactions:
+                            print(transaction.payload())
+
+                        for last_validator_id, data in self.wallet.peers.items():
+                            if data["public_key"] == last_validator_by_key:
+                                print("With validator (by id): ", last_validator_id)
                     elif command == "view_chain":
-                        self.wallet.view_blockchain()
+                        for block in self.wallet.blockchain.chain:
+                            print("Block index: ", block.index)
+                            print("Block validator: ", block.validator)
+                            print("Block previous hash: ", block.previous_hash)
+                            print("Block hash: ", block.current_hash)
+                            print("Block transactions: ")
+                            for transaction in block.transactions:
+                                print(transaction.payload())
+                            print("\n")
                     elif command == "balance":
                         balance = self.wallet.my_balance()
                         print("Balance, validated stake: ", balance, " BCCs")

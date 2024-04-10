@@ -17,7 +17,7 @@ class Blockchain:
         genesis_transaction = Transaction(
             sender_address="0",
             receiver_address=bootstrap_public_key,
-            amount=10000 * N,
+            amount=1000 * N,
             nonce=0,
             message="",
             type="Exchange",
