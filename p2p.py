@@ -43,7 +43,7 @@ class P2P:
         try:
             while not stop_event.is_set():
                 # Receive data from the client
-                data = peer_socket.recv(4096000)
+                data = peer_socket.recv(4096)
                 # Unpickle the received data
                 message = pickle.loads(data)
                 if message:
@@ -97,7 +97,7 @@ class P2P:
         bootstrap_socket.send(json.dumps(ip_port_pubkey).encode())
 
         # Receive peers' infos
-        peers_info_json = bootstrap_socket.recv(40960).decode()
+        peers_info_json = bootstrap_socket.recv(4096).decode()
         # Update self.peers (id, ip, port and public_key)
         self.peers = json.loads(peers_info_json)
         
