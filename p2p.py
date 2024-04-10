@@ -43,7 +43,7 @@ class P2P:
         try:
             while not stop_event.is_set():
                 # Receive data from the client
-                data = peer_socket.recv(409600)
+                data = peer_socket.recv(4096000)
                 # Unpickle the received data
                 message = pickle.loads(data)
                 if message:
@@ -165,7 +165,6 @@ class P2P:
             print()
             print("-----------------------------------------------------")
             print()
-
 
     def disconnect_sockets(self):
         for s in self.nodes.values():
