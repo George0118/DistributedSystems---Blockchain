@@ -218,7 +218,7 @@ class Wallet:
                 self.temp_stake = transaction.amount
                 self.temp_balance[sender_id] += previous_stake
                 self.temp_balance[sender_id] -= transaction.amount
-    
+
     def initial_distribution(self):
         """ Executes initialization transactions to all peers only from 0 so everyone has 1000 balance """
         for i in range(N):
@@ -266,7 +266,7 @@ class Wallet:
             print("Invalid block")   
 
         self.await_block = False
-    
+
     def validate_block(self, block:Block):
         """
         Validates a block
@@ -285,7 +285,6 @@ class Wallet:
             and block_prev_hash == prev_hash
         ):
             return True
-        
         return False
 
     def mint_block(self):
@@ -317,7 +316,7 @@ class Wallet:
                         validator_id = id
                         break
                 self.peers[validator_id]["balance"] += fees
-                
+
                 return block
             else:
                 print("I am not the validator")
@@ -332,11 +331,11 @@ class Wallet:
         with self.lock:
             for id, data in self.peers.items():
                 self.temp_balance[id] = data["balance"]
-    
+
     def stakes_and_messages(self, block: Block):
         with self.lock:
             latest_stakes = {}  # Dictionary to store the latest stake transaction for each node
-            
+
             for transaction in block.transactions:
                 if transaction.type == "Stake":
                     # Get the ID of the node making the stake transaction
@@ -347,7 +346,7 @@ class Wallet:
                             break
                     # Update the latest stake transaction for the node
                     if stake_node_id is not None:  # Make sure node ID is found
-                            latest_stakes[stake_node_id] = transaction.amount
+                        latest_stakes[stake_node_id] = transaction.amount
 
                 if transaction.type == "Exchange" and transaction.message != "" and self.public_key == transaction.receiver_address:
                     sender_id = None
@@ -417,7 +416,6 @@ class Wallet:
         """
         Returns last block's transactions and its validator's id
         """
-        
         last_valid_block = self.blockchain.chain[-1]
         last_block_transactions = last_valid_block.transactions
         last_validator_by_key = last_valid_block.validator
@@ -430,8 +428,9 @@ class Wallet:
                 print("With validator (by id): ", last_validator_id)
 
     def my_balance(self):
+        """Returns the balance and safe-state stake of the node"""
         return self.temp_balance[self.id], self.peers[self.id]["stake"]
-    
+
     def view_blockchain(self):
         """
         Returns the blockchain
