@@ -1,6 +1,5 @@
 """Contains various static methods for the Blockchain system"""
 
-import json
 import jsonpickle
 from Crypto.Hash import SHA256
 

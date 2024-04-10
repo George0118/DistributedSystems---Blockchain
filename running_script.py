@@ -16,4 +16,3 @@ if __name__ == '__main__':
     from node import Node
 
     node = Node(ip, base_port, stop_event)
-

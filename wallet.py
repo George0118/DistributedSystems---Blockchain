@@ -417,6 +417,7 @@ class Wallet:
         """
         Returns last block's transactions and its validator's id
         """
+        
         last_valid_block = self.blockchain.chain[-1]
         last_block_transactions = last_valid_block.transactions
         last_validator_by_key = last_valid_block.validator
@@ -426,8 +427,8 @@ class Wallet:
 
         for last_validator_id, data in self.peers.items():
             if data["public_key"] == last_validator_by_key:
-                print("With validator (by id): ", last_validator_id)                        
-                        
+                print("With validator (by id): ", last_validator_id)
+
     def my_balance(self):
         return self.temp_balance[self.id], self.peers[self.id]["stake"]
     
@@ -439,7 +440,7 @@ class Wallet:
             print("Block index: ", block.index)
             print("Block validator: ", block.validator)
             print("Block previous hash: ", block.previous_hash)
-            print("Block hash: ", block.hash)
+            print("Block hash: ", block.current_hash)
             print("Block transactions: ")
             for transaction in block.transactions:
                 print(transaction.payload())

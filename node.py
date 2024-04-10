@@ -30,10 +30,11 @@ class Node:
                 if len(command.strip()) != 0:
                     if command == "view":
                         self.wallet.view_block()                        
-
+                    elif command == "view_chain":
+                        self.wallet.view_blockchain()
                     elif command == "balance":
                         balance = self.wallet.my_balance()
-                        print("My balance is: ", balance, " BCCs")
+                        print("Balance, validated stake: ", balance, " BCCs")
 
                     elif command == "help":
                         print("Acceptable commands:")
@@ -94,4 +95,3 @@ class Node:
         input_thread.start()
 
         self.command_reading(input_queue, stop_event)
-
