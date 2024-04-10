@@ -157,13 +157,14 @@ class Wallet:
         
     def broadcast_transaction(self, transaction: Transaction):
         """ Broadcasts Transaction """
-        message = Message("TRANSACTION", transaction)
-        message = BlockChainUtils.encode(message)
+        with self.lock:
+            message = Message("TRANSACTION", transaction)
+            message = BlockChainUtils.encode(message)
 
-        if message is not None:
-            message = pickle.dumps(message)
-            for socket in self.nodes.values():
-                socket.sendall(message)
+            if message is not None:
+                message = pickle.dumps(message)
+                for socket in self.nodes.values():
+                    socket.sendall(message)
     
     def execute_transaction(self, transaction:Transaction):
         """ Executes a Transaction saving its changes to the wallets"""
