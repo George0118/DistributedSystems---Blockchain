@@ -99,7 +99,7 @@ class Node:
         if self.p2p.id == 'id0':
             self.wallet.initial_distribution()
         else:
-            while self.wallet.my_balance() == 0:
+            while self.wallet.my_balance()[0] == 0:
                 pass
 
         time.sleep(5)
