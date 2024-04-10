@@ -1,2 +1,2 @@
-N = 3
+N = 5
 CAPACITY = 10
