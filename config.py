@@ -1,2 +1,2 @@
-N = 5
-CAPACITY = 10
+N = None
+CAPACITY = None

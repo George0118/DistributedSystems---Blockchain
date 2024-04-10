@@ -1,4 +1,4 @@
-from running_script import N
+from config import N
 import socket
 import json
 import jsonpickle

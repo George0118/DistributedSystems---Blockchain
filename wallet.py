@@ -1,4 +1,4 @@
-from running_script import N, CAPACITY
+from config import N, CAPACITY
 from Crypto.PublicKey import RSA    # pycryptodome
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256

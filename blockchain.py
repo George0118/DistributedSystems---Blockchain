@@ -1,6 +1,6 @@
 """For creating and managing a linked list of chain"""
 
-from running_script import N
+from config import N
 from block import Block
 from utils import BlockChainUtils
 from transaction import Transaction
