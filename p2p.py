@@ -43,14 +43,7 @@ class P2P:
         try:
             while not stop_event.is_set():
                 # Receive data from the client
-                # data = peer_socket.recv(4096)
-                data_chunks = []
-                while True:
-                    packet = peer_socket.recv(4096)
-                    if not packet:
-                        break
-                    data_chunks.append(packet)
-                data = b''.join(data_chunks)
+                data = peer_socket.recv(4096)
                 # Unpickle the received data
                 message = pickle.loads(data)
 
