@@ -304,6 +304,8 @@ class Wallet:
                 for transaction in block.transactions:
                     self.execute_transaction(transaction)
 
+                self.fix_temp_balances()
+
                 self.transaction_pool.remove_from_pool(
                     block.transactions
                 )  # Clears transaction pool by removing all transactions added to block
@@ -428,7 +430,7 @@ class Wallet:
                 print("With validator (by id): ", last_validator_id)                        
                         
     def my_balance(self):
-        return self.temp_balance[self.id]
+        return self.temp_balance[self.id], self.peers[self.id]["stake"]
     
     def view_blockchain(self):
         """
