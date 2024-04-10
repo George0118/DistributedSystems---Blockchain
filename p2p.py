@@ -140,7 +140,7 @@ class P2P:
         # BOOTSTRAP NODE
         if ((self.ip, self.port) == self.bootstrap_node):
             self.id = "id0"
-            self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.public_key, 'balance': N*10000, 'stake': 10}}
+            self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.public_key, 'balance': N*1000, 'stake': 10}}
             self.blockchain = Blockchain(self.wallet.public_key)
             self.bootstrap_mode()
             t = threading.Thread(target=self.start_listening, args=(stop_event,))
