@@ -1,4 +1,3 @@
-from config import N, CAPACITY
 from Crypto.PublicKey import RSA    # pycryptodome
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
@@ -11,6 +10,7 @@ from message import Message
 import json
 from utils import BlockChainUtils
 from proof_of_stake import ProofOfStake
+from config import N, CAPACITY
 import threading
 
 class Wallet:
@@ -21,8 +21,10 @@ class Wallet:
         self.transaction_pool = TransactionPool()
         self.transaction_pool.set_wallet(self)
         self.pos = ProofOfStake()
-        self.await_block = False
+        self.await_block = 0
         self.lock = threading.RLock()
+        self.block_times = []
+        self.counter = 0
 
     def set_peers(self, peers, nodes):
         self.peers = peers
@@ -83,14 +85,15 @@ class Wallet:
         """
         Checks if transaction is valid and does not already exist - if valid it broadcasts it
         """
-        if self.validate_transaction(transaction):
-            # If the signature is valid and the transaction is new, it is added to the pool
-            self.transaction_pool.add_transaction(transaction)
-            self.temp_execute_transaction(transaction)
-            return transaction
-        else:
-            print("Invalid transaction")
-            return None
+        with self.lock:
+            if self.validate_transaction(transaction):
+                # If the signature is valid and the transaction is new, it is added to the pool
+                self.transaction_pool.add_transaction(transaction)
+                self.temp_execute_transaction(transaction)
+                return transaction
+            else:
+                print(f"Invalid transaction")
+                return None
         
     def handle_transaction(self, transaction:Transaction, flag = False):
         """
@@ -102,12 +105,12 @@ class Wallet:
                 self.transaction_pool.add_transaction(transaction)
                 self.temp_execute_transaction(transaction)
 
-                if self.transaction_pool.validation_required() and not self.await_block and not flag:
+                if self.transaction_pool.validation_required() and self.await_block <= 0 and not flag:
                         block = self.mint_block()
                         if block is not None:
                             self.broadcast_block(block)
             else:
-                print("Invalid transaction") 
+                print(f"Invalid transaction") 
 
     def validate_transaction(self, transaction:Transaction):
         """
@@ -218,13 +221,13 @@ class Wallet:
                 self.temp_stake = transaction.amount
                 self.temp_balance[sender_id] += previous_stake
                 self.temp_balance[sender_id] -= transaction.amount
-
+    
     def initial_distribution(self):
         """ Executes initialization transactions to all peers only from 0 so everyone has 1000 balance """
         for i in range(N):
             if i != 0:
                 receiver_address = self.peers['id'+ str(i)]["public_key"]
-                transaction = self.create_transaction(receiver_address, "Initialization", 10000, "")
+                transaction = self.create_transaction(receiver_address, "Initialization", 1000, "")
 
                 if self.check_transaction(transaction) is not None:
                     self.broadcast_transaction(transaction)
@@ -243,30 +246,35 @@ class Wallet:
         """
         if self.validate_block(block):
             # If block is valid then execute any transactions that are in the block and not in the pool
-            for transaction in block.transactions:
-                self.execute_transaction(transaction)
+            with self.lock:
+                for transaction in block.transactions:
+                    self.execute_transaction(transaction)
 
-            self.fix_temp_balances()
+                self.fix_temp_balances()
 
-            self.transaction_pool.remove_from_pool(
-                block.transactions
-            )
+                self.transaction_pool.remove_from_pool(
+                    block.transactions
+                )
 
-            # And add the block to the blockchain
-            self.stakes_and_messages(block)
-            fees = self.blockchain.add_block(block)
-            validator_id = None
-            for id, dict in self.peers.items():
-                if dict["public_key"] == block.validator:
-                    validator_id = id
-                    break
-            self.peers[validator_id]["balance"] += fees
+                # And add the block to the blockchain
+                self.stakes_and_messages(block)
+                fees = self.blockchain.add_block(block)
+                validator_id = None
+                for id, dict in self.peers.items():
+                    if dict["public_key"] == block.validator:
+                        validator_id = id
+                        break
+
+                self.peers[validator_id]["balance"] += fees
+                self.temp_balance[validator_id] += fees
+
+                # self.block_times.append(time.time() - self.starting_time)
 
         else:
             print("Invalid block")   
 
-        self.await_block = False
-
+        self.await_block -= 1
+   
     def validate_block(self, block:Block):
         """
         Validates a block
@@ -291,12 +299,14 @@ class Wallet:
         """
         Checks if you are the validator and triggers block creation if necessary
         """
+        # self.starting_time = time.time()
         with self.lock:
             prev_hash = self.blockchain.get_prevhash()
             validator_id = self.pos.validator(prev_hash)
             validator_pk = self.peers[validator_id]["public_key"]
             if validator_pk == self.public_key:
                 print("I am the validator")
+                self.counter += 1
                 index = self.blockchain.next_index()
                 block = Block(self.transaction_pool.transactions[:CAPACITY], prev_hash, validator_pk, index)
                 for transaction in block.transactions:
@@ -316,11 +326,13 @@ class Wallet:
                         validator_id = id
                         break
                 self.peers[validator_id]["balance"] += fees
-
+                self.temp_balance[validator_id] += fees
+                # self.block_times.append(time.time() - self.starting_time)
+                
                 return block
             else:
-                print("I am not the validator")
-                self.await_block = True
+                print(f"I am not the validator")
+                self.await_block += 1
                 return None
 
     def fix_balances(self):
@@ -331,11 +343,11 @@ class Wallet:
         with self.lock:
             for id, data in self.peers.items():
                 self.temp_balance[id] = data["balance"]
-
+    
     def stakes_and_messages(self, block: Block):
         with self.lock:
             latest_stakes = {}  # Dictionary to store the latest stake transaction for each node
-
+            
             for transaction in block.transactions:
                 if transaction.type == "Stake":
                     # Get the ID of the node making the stake transaction
@@ -376,10 +388,11 @@ class Wallet:
         message = Message("BLOCK", block)
         message = BlockChainUtils.encode(message)
 
-        if message is not None:
-            message = pickle.dumps(message)
-            for socket in self.nodes.values():
-                socket.sendall(message)
+        with self.lock:
+            if message is not None:
+                message = pickle.dumps(message)
+                for socket in self.nodes.values():
+                    socket.sendall(message)
 
     def broadcast_blockchain(self, blockchain:Blockchain):
         """ Broadcasts Block """
@@ -425,12 +438,12 @@ class Wallet:
 
         for last_validator_id, data in self.peers.items():
             if data["public_key"] == last_validator_by_key:
-                print("With validator (by id): ", last_validator_id)
-
+                print("With validator (by id): ", last_validator_id)                        
+                        
     def my_balance(self):
         """Returns the balance and safe-state stake of the node"""
         return self.temp_balance[self.id], self.peers[self.id]["stake"]
-
+    
     def view_blockchain(self):
         """
         Returns the blockchain

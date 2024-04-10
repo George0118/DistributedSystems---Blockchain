@@ -43,22 +43,40 @@ class P2P:
         try:
             while not stop_event.is_set():
                 # Receive data from the client
-                data = peer_socket.recv(409600)
+                data = peer_socket.recv(4096)
                 # Unpickle the received data
                 message = pickle.loads(data)
-                if message:
-                    decoded_message = BlockChainUtils.decode(message)
-                    if decoded_message.message_type == "TRANSACTION":
-                        self.wallet.handle_transaction(decoded_message.data)
-                    elif decoded_message.message_type == "BLOCK":
-                        self.wallet.handle_block(decoded_message.data)
-                    else:
-                        self.wallet.handle_blockchain(decoded_message.data)
+
+                t = threading.Thread(target=self.message_handler, args=(message,))
+                t.daemon = True
+                t.start()
+                # # Receive data from the client
+                # data = peer_socket.recv(409600)
+                # # Unpickle the received data
+                # message = pickle.loads(data)
+                # if message:
+                #     decoded_message = BlockChainUtils.decode(message)
+                #     if decoded_message.message_type == "TRANSACTION":
+                #         self.wallet.handle_transaction(decoded_message.data)
+                #     elif decoded_message.message_type == "BLOCK":
+                #         self.wallet.handle_block(decoded_message.data)
+                #     else:
+                #         self.wallet.handle_blockchain(decoded_message.data)
         except EOFError:
             # Shutdown and close the socket when done
             peer_socket.shutdown(socket.SHUT_RDWR)
             peer_socket.close()
-            stop_event.set()  # Set the stop event to signal the node that nodes are starting to close
+            # stop_event.set()  # Set the stop event to signal the node that nodes are starting to close
+
+    def message_handler(self, message):
+        if message:
+            decoded_message = BlockChainUtils.decode(message)
+            if decoded_message.message_type == "TRANSACTION":
+                self.wallet.handle_transaction(decoded_message.data)
+            elif decoded_message.message_type == "BLOCK":
+                self.wallet.handle_block(decoded_message.data)
+            else:
+                self.wallet.handle_blockchain(decoded_message.data)
 
     def connect_to_all_peers(self):
         for peer_id, peer_info in self.peers.items():
@@ -140,7 +158,7 @@ class P2P:
         # BOOTSTRAP NODE
         if ((self.ip, self.port) == self.bootstrap_node):
             self.id = "id0"
-            self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.public_key, 'balance': N*10000, 'stake': 10}}
+            self.peers = {self.id: {'ip': self.ip, 'port': self.port, 'public_key': self.public_key, 'balance': N*1000, 'stake': 10}}
             self.blockchain = Blockchain(self.wallet.public_key)
             self.bootstrap_mode()
             t = threading.Thread(target=self.start_listening, args=(stop_event,))
