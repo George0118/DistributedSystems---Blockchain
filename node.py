@@ -27,6 +27,7 @@ class Node:
         print(self.wallet.block_times)
         balance, stake = self.wallet.my_balance()
         print("My balance is:", balance, "BCCs and my Validated Stake is:", stake)
+        print("I was validator:", self.wallet.counter, "times.")
 
     def command_reading(self, input_queue: Queue, stop_event):
         print(f"Received commands from the text file.")

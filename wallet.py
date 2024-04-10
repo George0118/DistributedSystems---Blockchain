@@ -25,6 +25,7 @@ class Wallet:
         self.await_block = False
         self.lock = threading.RLock()
         self.block_times = []
+        self.counter = 0
 
     def set_peers(self, peers, nodes):
         self.peers = peers
@@ -303,6 +304,7 @@ class Wallet:
             validator_pk = self.peers[validator_id]["public_key"]
             if validator_pk == self.public_key:
                 print(f"I am the validator")
+                self.counter += 1
                 index = self.blockchain.next_index()
                 block = Block(self.transaction_pool.transactions[:CAPACITY], prev_hash, validator_pk, index)
                 for transaction in block.transactions:
