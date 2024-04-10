@@ -36,6 +36,7 @@ class Node:
             try:
                 command = input_queue.get_nowait()
                 print("Acquired command: ", command)
+                time.sleep(0.1)
                 if len(command.strip()) != 0:
                     if command == "view":
                         last_block_transactions, last_validator_id = self.wallet.view_block()
