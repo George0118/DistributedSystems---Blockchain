@@ -2,7 +2,6 @@
 
 from config import N
 from block import Block
-from utils import BlockChainUtils
 from transaction import Transaction
 
 
@@ -30,11 +29,12 @@ class Blockchain:
         total_fees = block.sum_fees()
         self.chain.append(block)
         return total_fees
-    
+
     def get_prevhash(self):
         """Returns the hash of the last block in the blockchain"""
         last_block = self.chain[-1]
         return last_block.current_hash
-    
+
     def next_index(self):
+        """Returns the index of the next block"""
         return len(self.chain)
