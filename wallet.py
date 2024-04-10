@@ -12,6 +12,7 @@ from utils import BlockChainUtils
 from proof_of_stake import ProofOfStake
 from config import N, CAPACITY
 import threading
+import time
 
 class Wallet:
 
@@ -23,6 +24,7 @@ class Wallet:
         self.pos = ProofOfStake()
         self.await_block = False
         self.lock = threading.RLock()
+        self.block_times = []
 
     def set_peers(self, peers, nodes):
         self.peers = peers
@@ -262,6 +264,8 @@ class Wallet:
                     break
             self.peers[validator_id]["balance"] += fees
 
+            self.block_times.append(time.time() - self.starting_time)
+
         else:
             print(f"Invalid block")   
 
@@ -292,6 +296,7 @@ class Wallet:
         """
         Checks if you are the validator and triggers block creation if necessary
         """
+        self.starting_time = time.time()
         with self.lock:
             prev_hash = self.blockchain.get_prevhash()
             validator_id = self.pos.validator(prev_hash)
@@ -317,6 +322,7 @@ class Wallet:
                         validator_id = id
                         break
                 self.peers[validator_id]["balance"] += fees
+                self.block_times.append(time.time() - self.starting_time)
                 
                 return block
             else:
