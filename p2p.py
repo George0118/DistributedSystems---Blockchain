@@ -46,18 +46,32 @@ class P2P:
                 data = peer_socket.recv(4096)
                 # Unpickle the received data
                 message = pickle.loads(data)
-                if message:
-                    decoded_message = BlockChainUtils.decode(message)
-                    if decoded_message.message_type == "TRANSACTION":
-                        self.wallet.handle_transaction(decoded_message.data)
-                    elif decoded_message.message_type == "BLOCK":
-                        self.wallet.handle_block(decoded_message.data)
-                    else:
-                        self.wallet.handle_blockchain(decoded_message.data)
+
+                t = threading.Thread(target=self.message_handler, args=(message,))
+                t.daemon = True
+                t.start()
+                # if message:
+                #     decoded_message = BlockChainUtils.decode(message)
+                #     if decoded_message.message_type == "TRANSACTION":
+                #         self.wallet.handle_transaction(decoded_message.data)
+                #     elif decoded_message.message_type == "BLOCK":
+                #         self.wallet.handle_block(decoded_message.data)
+                #     else:
+                #         self.wallet.handle_blockchain(decoded_message.data)
         except EOFError:
             # Shutdown and close the socket when done
             peer_socket.shutdown(socket.SHUT_RDWR)
             peer_socket.close()
+
+    def message_handler(self, message):
+        if message:
+            decoded_message = BlockChainUtils.decode(message)
+            if decoded_message.message_type == "TRANSACTION":
+                self.wallet.handle_transaction(decoded_message.data)
+            elif decoded_message.message_type == "BLOCK":
+                self.wallet.handle_block(decoded_message.data)
+            else:
+                self.wallet.handle_blockchain(decoded_message.data)
 
 
     def connect_to_all_peers(self):
