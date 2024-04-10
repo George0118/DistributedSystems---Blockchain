@@ -100,7 +100,7 @@ class P2P:
         peers_info_json = bootstrap_socket.recv(40960).decode()
         # Update self.peers (id, ip, port and public_key)
         self.peers = json.loads(peers_info_json)
-        
+
         bootstrap_socket.close()
 
 
@@ -130,7 +130,7 @@ class P2P:
 
             temp_sockets.append(temp_socket)            
             i += 1
-        
+
         for socket in temp_sockets:
             socket.send(json.dumps(self.peers).encode())
 
@@ -148,7 +148,7 @@ class P2P:
             t.start()
             time.sleep(0.5)
             self.connect_to_all_peers()
-            print(f"End of bootstrapping phase!")
+            print("End of bootstrapping phase!")
             print()
             print("-----------------------------------------------------")
             print()
@@ -161,7 +161,10 @@ class P2P:
             t.start()
             time.sleep(0.5)
             self.connect_to_all_peers()
-            print(f"{self.id}: End of bootstrapping phase!")
+            print("End of bootstrapping phase!")
+            print()
+            print("-----------------------------------------------------")
+            print()
 
     def disconnect_sockets(self):
         for s in self.nodes.values():
