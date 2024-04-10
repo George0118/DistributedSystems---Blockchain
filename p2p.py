@@ -1,10 +1,10 @@
-from config import N
+import pickle
+import threading
+import time
 import socket
 import json
 import jsonpickle
-import threading
-import time
-import pickle
+from config import N
 from utils import BlockChainUtils
 from blockchain import Blockchain
 
@@ -38,7 +38,7 @@ class P2P:
             t = threading.Thread(target=self.handle_connection, args=(peer_listening_socket, peer_id, stop_event,))
             t.daemon = True
             t.start()
-    
+
     def handle_connection(self, peer_socket, peer_id, stop_event):
         try:
             while not stop_event.is_set():
@@ -108,7 +108,7 @@ class P2P:
         self.listening_socket.listen()
         i = 1
         temp_sockets = []
-        
+
         while i < self.cluster_size:
             id = "id" + str(i)
             temp_socket, client_address = self.listening_socket.accept()
@@ -119,7 +119,7 @@ class P2P:
             }
 
             temp_socket.send(json.dumps(id_blockchain).encode())
-            
+
             ip_port_pubkey_json = temp_socket.recv(1024).decode()
             ip_port_pubkey = json.loads(ip_port_pubkey_json)
             ip = ip_port_pubkey['ip']
@@ -152,7 +152,7 @@ class P2P:
             print()
             print("-----------------------------------------------------")
             print()
-        
+
         # NON-BOOTSTRAP NODES
         else:
             self.connect_to_bootstrap_node(self.bootstrap_node[0], self.bootstrap_node[1])

@@ -1,11 +1,9 @@
-from p2p import P2P
-import pickle
-from queue import Queue
 import json
 import threading
+from queue import Queue
+from p2p import P2P
 from wallet import Wallet
 from commands import read_input, process_command
-import time
 
 class Node:
     # Class that represents the each node of the cluster    

@@ -9,13 +9,14 @@ class ProofOfStake:
         self.stakes = {}  # Mapping of account to stake
 
     def set_stakes(self, stakes):
+        """Sets the stakes"""
         self.stakes = stakes
 
     def validator_lots(self):
         """Creates list of all lots"""
         lots = []
         for validator, stake in self.stakes.items():
-            for i in range(stake):
+            for _ in range(stake):
                 lots.append(validator)
         return lots
 

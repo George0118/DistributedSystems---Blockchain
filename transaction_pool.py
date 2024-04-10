@@ -9,6 +9,7 @@ class TransactionPool:
         self.transactions = []  # A list of transactions
 
     def set_wallet(self, wallet):
+        """Sets the wallet"""
         self.wallet = wallet
 
     def add_transaction(self, transaction):
@@ -36,6 +37,7 @@ class TransactionPool:
         """Decides if it is time to create a new block"""
         with self.wallet.lock:
             return len(self.transactions) >= CAPACITY
-    
+
     def get_length(self):
+        """Returns the length of the transaction pool"""
         return len(self.transactions)
