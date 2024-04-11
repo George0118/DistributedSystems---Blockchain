@@ -62,3 +62,70 @@ services:
     tty: true
     depends_on:
       - python_container_0
+
+# -------- 10 NODES -------- #
+
+  python_container_5:
+    build: .
+    network_mode: "host"
+    environment:
+      - CONTAINER_NUMBER=5
+      - PORT_NUMBER=40005
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+    depends_on:
+      - python_container_0
+
+  python_container_6:
+    build: .
+    network_mode: "host"
+    environment:
+      - CONTAINER_NUMBER=6
+      - PORT_NUMBER=40006
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+    depends_on:
+      - python_container_0
+
+  python_container_7:
+    build: .
+    network_mode: "host"
+    environment:
+      - CONTAINER_NUMBER=7
+      - PORT_NUMBER=40007
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+    depends_on:
+      - python_container_0
+
+  python_container_8:
+    build: .
+    network_mode: "host"
+    environment:
+      - CONTAINER_NUMBER=8
+      - PORT_NUMBER=40008
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+    depends_on:
+      - python_container_0
+
+  python_container_9:
+    build: .
+    network_mode: "host"
+    environment:
+      - CONTAINER_NUMBER=9
+      - PORT_NUMBER=40009
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+    depends_on:
+      - python_container_0

@@ -24,12 +24,20 @@ class Node:
         # Start Blockchaining
         self.blockchaining(stop_event)
 
+        print("Transaction execution time:", self.end_time - self.starting_time)
+        print("Block Times:")
+        print(self.wallet.block_times)
+        balance, stake = self.wallet.my_balance()
+        print("My balance is:", balance, "BCCs and my Validated Stake is:", stake)
+        print("I was validator:", self.wallet.counter, "times.")
+
     def command_reading(self, input_queue: Queue, stop_event):
+        print(f"Received commands from the text file.")
         while not stop_event.is_set():
+            # Read command from the command line
             try:
-                # Read command from the command line
                 command = input_queue.get_nowait()
-                print("Acquired command:", command)
+                print("Acquired command: ", command)
                 if len(command.strip()) != 0:
                     if command == "view":
                         last_block_transactions, last_validator_id = self.wallet.view_block()
@@ -39,8 +47,8 @@ class Node:
                         print("With validator (by id): ", last_validator_id)
 
                     elif command == "balance":
-                        balance = self.wallet.my_balance()
-                        print("My balance is: ", balance, " BCCs")
+                        balance, stake = self.wallet.my_balance()
+                        print("My balance is:", balance, "BCCs and my Validated Stake is:", stake)
 
                     elif command == "help":
                         print("Acceptable commands:")
@@ -49,10 +57,6 @@ class Node:
                         print("stake <number>: Stake the specified amount")
                         print("view: View the last validated block's transactions and validator")
                         print("balance: View your current balance (up to the last validated block)")
-
-                    elif command == "exit":
-                        break
-
                     else:
                         arguments = process_command(command)
                         arguments = json.loads(arguments)
@@ -69,38 +73,41 @@ class Node:
                                                         arguments.get("amount", 0),  # Use default value if "amount" key is not present
                                                         arguments.get("message", "")  # Use default value if "data" key is not present
                                                     )
-                    
-                        if self.wallet.check_transaction(transaction_to_send) is not None:
-                            self.wallet.broadcast_transaction(transaction_to_send)
+                        with self.wallet.lock:
+                            if self.wallet.check_transaction(transaction_to_send) is not None:
+                                self.wallet.broadcast_transaction(transaction_to_send)
 
-                        if self.wallet.transaction_pool.validation_required() and not self.wallet.await_block:
-                            block = self.wallet.mint_block()
-                            if block is not None:
-                                self.wallet.broadcast_block(block)
+                            if self.wallet.transaction_pool.validation_required() and self.wallet.await_block <= 0:
+                                block = self.wallet.mint_block()
+                                if block is not None:
+                                    self.wallet.broadcast_block(block)
+
             except Empty:
                 print("Queue is empty")
                 print(len(self.wallet.transaction_pool.transactions))
                 while self.wallet.transaction_pool.validation_required():
-                    if not self.wallet.await_block:
+                    if self.wallet.await_block <= 0:
                         block = self.wallet.mint_block()
                         if block is not None:
                             self.wallet.broadcast_block(block)
                             
+                self.end_time = time.time()
                 time.sleep(10)
                 self.p2p.disconnect_sockets()
                 print(len(self.wallet.transaction_pool.transactions))
                 break
 
-
     def blockchaining(self, stop_event):
 
         if self.p2p.id == 'id0':
             self.wallet.initial_distribution()
-        # else:
-        #     while self.wallet.my_balance() == 0:
-        #         pass
+        else:
+            while self.wallet.my_balance()[0] == 0:
+                pass
 
         time.sleep(5)
+
+        self.starting_time = time.time()
 
         input_queue = file_parsing(self.p2p.id)
 

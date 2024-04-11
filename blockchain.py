@@ -29,6 +29,7 @@ class Blockchain:
         """Adds a block to the blockchain and executes the transactions in the block"""
         total_fees = block.sum_fees()
         self.chain.append(block)
+        print(len(self.chain))
         return total_fees
     
     def get_prevhash(self):
