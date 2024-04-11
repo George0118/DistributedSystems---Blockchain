@@ -33,8 +33,8 @@ The implementation of the system consists of several core components:
    python running_script.py 127.0.0.1 40002 5 10
    python running_script.py 127.0.0.1 40003 5 10
    python running_script.py 127.0.0.1 40004 5 10
-
-
+   ```
+   
 2. Follow the command-line interface (CLI) prompts to interact with the system. Below are the acceptable commands:
 
 - **t \<number\>**: Perform a transaction with the specified amount.
