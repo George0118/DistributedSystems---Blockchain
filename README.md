@@ -45,6 +45,7 @@ The implementation of the system consists of several core components:
 
 ## File Structure
 
+```bash
 DistributedSystems-Blockchain
 ├──  block.py
 ├──  blockchain.py
