@@ -6,7 +6,7 @@ This project implements a platform for exchanging messages and a digital currenc
 ## System Design
 The implementation of the system consists of several core components:
 
-### Core Classes
+### Core Blockchain Classes
 - `block.py`: Implements the basic structure of a block in the blockchain, including its index, timestamp, transactions, validator, and hash.
 - `blockchain.py`: Acts as a container for blocks, providing functions for managing the blockchain.
 - `transaction.py`: Represents transactions and messages created by users, including functions for handling transactions.
@@ -15,7 +15,7 @@ The implementation of the system consists of several core components:
 
 ### Node Communication
 - `message.py`: Helper class for creating messages sent between nodes.
-- `node.py`: Represents each node in the system, initializes the node with its IP address and port, creates a wallet and peer-to-peer object, and handles node communication.
+- `node.py`: Represents each node in the system, initializes the node with its IP address and port, creates a wallet and peer-to-peer object, and handles node communication and the CLI.
 - `p2p.py`: Implements a peer-to-peer network for node communication using TCP sockets.
 
 ## Installation
@@ -39,16 +39,16 @@ The implementation of the system consists of several core components:
 
 ## File Structure
 src/
-|-- block.py
-|-- blockchain.py
-|-- commands.py
-|-- config.py
-|-- message.py
-|-- node.py
-|-- p2p.py
-|-- proof_of_stake.py
-|-- running_script.py
-|-- transaction.py
-|-- transaction_pool.py
-|-- utils.py
-|-- wallet.py
+├──  block.py
+├──  blockchain.py
+├──  commands.py
+├──  config.py
+├──  message.py
+├──  node.py
+├──  p2p.py
+├──  proof_of_stake.py
+├──  running_script.py
+├──  transaction.py
+├──  transaction_pool.py
+├──  utils.py
+└──  wallet.py
