@@ -23,40 +23,33 @@ The implementation of the system consists of several core components:
 2. Install dependencies: `pip install -r requirements.txt`
 
 ## Usage
-1. Start the application by running the `running_script.py` file from N separate terminals. Provide the IP address, port number, number of nodes, and block capacity as arguments.
-
-   For example, for N=5 and Capacity=10. If the bootstrap node's IP address and port are `(127.0.0.1, 40000)` and you are running locally, execute the following commands from different terminals:
-
-   ```bash
-   python running_script.py 127.0.0.1 40000 5 10
-   python running_script.py 127.0.0.1 40001 5 10
-   python running_script.py 127.0.0.1 40002 5 10
-   python running_script.py 127.0.0.1 40003 5 10
-   python running_script.py 127.0.0.1 40004 5 10
-   ```
+1. Start the application by running the `docker-compose up` or if you are on Windows run `./start.ps1` to also automatically open N terminals for better viewing. In future versions we will change the script to version Linux and Mac OS too.
    
-2. Follow the command-line interface (CLI) prompts to interact with the system. Below are the acceptable commands:
-
-- **t \<number\>**: Perform a transaction with the specified amount.
-- **m \<text\>**: Send a message with the provided text.
-- **stake \<number\>**: Stake the specified amount.
-- **view**: View the last validated block's transactions and validator.
-- **balance**: View your current balance (up to the last validated block).
+2. The process will start and each user (container) will read from its own input file and try to execute the transactions.
 
 ## File Structure
 
 ```bash
 DistributedSystems-Blockchain
+├──  input_5
+│   └──  transX.txt
+├──  input_10
+│   └──  transX.txt
 ├──  block.py
 ├──  blockchain.py
 ├──  commands.py
 ├──  config.py
+├──  docker-compose.yml
+├──  dockerfile
+├──  main.py
 ├──  message.py
 ├──  node.py
 ├──  p2p.py
 ├──  proof_of_stake.py
 ├──  requirements.txt
 ├──  running_script.py
+├──  start.ps1
+├──  stop.ps1
 ├──  transaction.py
 ├──  transaction_pool.py
 ├──  utils.py
