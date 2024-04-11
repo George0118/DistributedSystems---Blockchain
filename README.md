@@ -44,6 +44,7 @@ The implementation of the system consists of several core components:
 - **balance**: View your current balance (up to the last validated block).
 
 ## File Structure
+
 ├──  block.py
 ├──  blockchain.py
 ├──  commands.py
