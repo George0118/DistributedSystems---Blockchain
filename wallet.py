@@ -318,6 +318,7 @@ class Wallet:
                         validator_id = id
                         break
                 self.peers[validator_id]["balance"] += fees
+                self.temp_balance[validator_id] += fees
 
                 return block
             else:

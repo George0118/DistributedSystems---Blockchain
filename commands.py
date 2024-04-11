@@ -4,7 +4,7 @@ import json
 def read_input(queue, stop_event, id):
     """Read user input and put it into the appropriate thread's queue"""
     while not stop_event.is_set():
-        user_input = input(f"> {id.upper()} ").strip()
+        user_input = input(f"> {id.upper()}: ").strip()
         if user_input.lower() == "exit":
             stop_event.set()  # Set the stop event to signal threads to exit
             break
