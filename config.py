@@ -1,2 +1,2 @@
-N = 10
-CAPACITY = 20
+N = 5
+CAPACITY = 10

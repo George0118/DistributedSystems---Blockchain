@@ -15,7 +15,7 @@ class Node:
         self.wallet = Wallet()
         self.p2p = P2P(self.ip, self.port, self.wallet)
         if self.port != 40000:
-            time.sleep(5)
+            time.sleep(10)
         self.p2p.p2p_network_init(stop_event)
         self.wallet.set_peers(self.p2p.peers, self.p2p.nodes)
         self.wallet.set_blockchain(self.p2p.blockchain)
@@ -105,7 +105,7 @@ class Node:
             while self.wallet.my_balance()[0] == 0:
                 pass
 
-        time.sleep(5)
+        time.sleep(10)
 
         self.starting_time = time.time()
 

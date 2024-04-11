@@ -402,7 +402,7 @@ class Wallet:
         message = BlockChainUtils.encode(message)
 
         with self.lock:
-            time.sleep(0.5)
+            time.sleep(0.1)
             if message is not None:
                 message = pickle.dumps(message)
                 for socket in self.nodes.values():
