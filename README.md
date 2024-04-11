@@ -38,7 +38,6 @@ The implementation of the system consists of several core components:
 2. Follow the CLI prompts to interact with the system, including sending messages and transactions.
 
 ## File Structure
-src/
 ├──  block.py
 ├──  blockchain.py
 ├──  commands.py
@@ -47,6 +46,7 @@ src/
 ├──  node.py
 ├──  p2p.py
 ├──  proof_of_stake.py
+├──  requirements.txt
 ├──  running_script.py
 ├──  transaction.py
 ├──  transaction_pool.py
